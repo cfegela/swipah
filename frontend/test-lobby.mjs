@@ -27,7 +27,8 @@ async function runTest() {
   // 2. Host creates room
   console.log('2. Host (Player 1) creating room...');
   const { data: createData, error: createErr } = await p1.client.rpc('create_room', {
-    p_display_name: 'HostAlice'
+    p_display_name: 'HostAlice',
+    p_looking_for: 'Both',
   });
   if (createErr) throw new Error('create_room failed: ' + createErr.message);
 
@@ -51,6 +52,7 @@ async function runTest() {
     const { data: joinData, error: joinErr } = await joiner.client.client.rpc('join_room', {
       p_room_id: roomId,
       p_display_name: joiner.name,
+      p_looking_for: 'Both',
     });
     if (joinErr) throw new Error(`Player ${joiner.name} join failed: ${joinErr.message}`);
     console.log(`   ✓ Player ${joiner.name} joined: Seat ${joinData.player.seat_number}`);
@@ -78,6 +80,7 @@ async function runTest() {
   const { data: reconnectData, error: reconnectErr } = await p2.client.rpc('join_room', {
     p_room_id: roomId,
     p_display_name: 'BobUpdated',
+    p_looking_for: 'Woman',
   });
   if (reconnectErr) throw new Error('Reconnection failed: ' + reconnectErr.message);
   if (!reconnectData.reconnected || reconnectData.player.seat_number !== 2) {
@@ -90,6 +93,7 @@ async function runTest() {
   const { error: fullRoomErr } = await p5.client.rpc('join_room', {
     p_room_id: roomId,
     p_display_name: 'Eve',
+    p_looking_for: 'Man',
   });
   if (!fullRoomErr) {
     throw new Error('Expected 5th player to be rejected, but join succeeded!');
@@ -122,6 +126,7 @@ async function runTest() {
   const { error: lateJoinErr } = await p5.client.rpc('join_room', {
     p_room_id: roomId,
     p_display_name: 'LateEve',
+    p_looking_for: 'Both',
   });
   if (!lateJoinErr) {
     throw new Error('Late join succeeded on active game!');
@@ -152,6 +157,7 @@ async function runTest() {
   const soloHost = await createAnonymousClient();
   const { data: soloCreate } = await soloHost.client.rpc('create_room', {
     p_display_name: 'SoloTester',
+    p_looking_for: 'Both',
   });
   const soloRoomId = soloCreate.room.id;
   const { data: soloStart, error: soloStartErr } = await soloHost.client.rpc('start_game', {

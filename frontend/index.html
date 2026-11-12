@@ -55,20 +55,17 @@
           </div>
           <div class="form-group" style="text-align: left;">
             <label>Looking For:</label>
-            <div class="pill-radio-group" id="join-looking-for-group" role="radiogroup" aria-label="Looking For">
-              <button type="button" class="pill-radio-btn" data-value="Man" role="radio" aria-checked="false">
+            <div class="pill-radio-group" id="join-looking-for-group" role="group" aria-label="Looking For">
+              <button type="button" class="pill-radio-btn" data-value="Man" aria-pressed="false">
                 Man
               </button>
-              <button type="button" class="pill-radio-btn" data-value="Woman" role="radio" aria-checked="false">
+              <button type="button" class="pill-radio-btn" data-value="Woman" aria-pressed="false">
                 Woman
               </button>
-              <button type="button" class="pill-radio-btn active" data-value="Anything That Moves" role="radio" aria-checked="true">
-                Anything That Moves
-              </button>
             </div>
-            <input type="hidden" id="join-looking-for" value="Anything That Moves" />
+            <input type="hidden" id="join-looking-for" value="" />
           </div>
-          <button id="btn-join-game" class="btn btn-success" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+          <button id="btn-join-game" class="btn btn-success" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;" disabled>
             Join Game
           </button>
         </div>
@@ -97,24 +94,21 @@
           </div>
           <div class="form-group">
             <label>Looking For:</label>
-            <div class="pill-radio-group" id="host-looking-for-group" role="radiogroup" aria-label="Looking For">
-              <button type="button" class="pill-radio-btn" data-value="Man" role="radio" aria-checked="false">
+            <div class="pill-radio-group" id="host-looking-for-group" role="group" aria-label="Looking For">
+              <button type="button" class="pill-radio-btn" data-value="Man" aria-pressed="false">
                 Man
               </button>
-              <button type="button" class="pill-radio-btn" data-value="Woman" role="radio" aria-checked="false">
+              <button type="button" class="pill-radio-btn" data-value="Woman" aria-pressed="false">
                 Woman
               </button>
-              <button type="button" class="pill-radio-btn active" data-value="Anything That Moves" role="radio" aria-checked="true">
-                Anything That Moves
-              </button>
             </div>
-            <input type="hidden" id="host-looking-for" value="Anything That Moves" />
+            <input type="hidden" id="host-looking-for" value="" />
           </div>
           <div class="actions-row modal-actions-row">
             <button id="btn-cancel-host" class="btn btn-secondary">
               Cancel
             </button>
-            <button id="btn-confirm-create-room" class="btn btn-primary">
+            <button id="btn-confirm-create-room" class="btn btn-primary" disabled>
               Start Game
             </button>
           </div>

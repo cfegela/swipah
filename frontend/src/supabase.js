@@ -34,7 +34,7 @@ export async function ensureAnonymousSession() {
 /**
  * Create a new room with host placed in Seat 1.
  */
-export async function createRoom(displayName, lookingFor = 'Anything That Moves') {
+export async function createRoom(displayName, lookingFor) {
   await ensureAnonymousSession();
   let { data, error } = await supabase.rpc('create_room', {
     p_display_name: displayName.trim(),
@@ -60,7 +60,7 @@ export async function createRoom(displayName, lookingFor = 'Anything That Moves'
 /**
  * Concurrency-safe room joining with seat allocation.
  */
-export async function joinRoom(roomId, displayName, lookingFor = 'Anything That Moves') {
+export async function joinRoom(roomId, displayName, lookingFor) {
   await ensureAnonymousSession();
   let { data, error } = await supabase.rpc('join_room', {
     p_room_id: roomId,

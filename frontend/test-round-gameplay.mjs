@@ -23,10 +23,11 @@ function assert(condition, message) {
 async function runRoundGameplayTest() {
   console.log('🧪 Starting Phase 1 Dating Game Loop & Round Play Test...\n');
 
-  // 1. Create two players: Host Alice and Player Bob
-  console.log('1. Signing in Host (Alice) and Player 2 (Bob)...');
+  // 1. Create players: Host Alice, Player 2 Bob, Player 3 Charlie
+  console.log('1. Signing in Host (Alice), Player 2 (Bob), and Player 3 (Charlie)...');
   const aliceClient = createAnonClient();
   const bobClient = createAnonClient();
+  const charlieClient = createAnonClient();
 
   const { data: aliceAuth, error: aliceAuthErr } = await aliceClient.auth.signInAnonymously();
   assert(!aliceAuthErr, 'Alice auth failed: ' + aliceAuthErr?.message);
@@ -36,8 +37,21 @@ async function runRoundGameplayTest() {
   assert(!bobAuthErr, 'Bob auth failed: ' + bobAuthErr?.message);
   const bobUser = bobAuth.user;
 
+  const { data: charlieAuth, error: charlieAuthErr } = await charlieClient.auth.signInAnonymously();
+  assert(!charlieAuthErr, 'Charlie auth failed: ' + charlieAuthErr?.message);
+  const charlieUser = charlieAuth.user;
+
   console.log(`   ✓ Alice ID: ${aliceUser.id}`);
   console.log(`   ✓ Bob ID: ${bobUser.id}`);
+  console.log(`   ✓ Charlie ID: ${charlieUser.id}`);
+
+  // Test missing looking_for rejection
+  console.log('\nTesting rejection when "looking for" is not selected...');
+  const { error: noOptionErr } = await aliceClient.rpc('create_room', {
+    p_display_name: 'NoOptionAlice',
+  });
+  assert(noOptionErr && noOptionErr.message.includes('Looking For'), 'Must reject when looking_for is missing: ' + noOptionErr?.message);
+  console.log(`   ✓ Correctly rejected missing looking_for: "${noOptionErr.message}"`);
 
   // 2. Host creates room with looking_for: 'Man'
   console.log('\n2. Alice creates room (Looking for: "Man")...');
@@ -61,8 +75,19 @@ async function runRoundGameplayTest() {
   assert(joinData.player.looking_for === 'Woman', 'Bob looking_for should be Woman');
   console.log(`   ✓ Bob seated: Seat ${joinData.player.seat_number}, looking_for: ${joinData.player.looking_for}`);
 
-  // 4. Start game
-  console.log('\n4. Alice starts the game...');
+  // 4. Charlie joins room with looking_for: 'Both' (Both Man and Woman selected)
+  console.log('\n4. Charlie joins room (Looking for: "Both" - clicked both Man and Woman)...');
+  const { data: charlieJoin, error: charlieJoinErr } = await charlieClient.rpc('join_room', {
+    p_room_id: roomId,
+    p_display_name: 'Charlie',
+    p_looking_for: 'Both',
+  });
+  assert(!charlieJoinErr, 'Failed to join room: ' + charlieJoinErr?.message);
+  assert(charlieJoin.player.looking_for === 'Both', 'Charlie looking_for should be Both');
+  console.log(`   ✓ Charlie seated: Seat ${charlieJoin.player.seat_number}, looking_for: ${charlieJoin.player.looking_for}`);
+
+  // 5. Start game
+  console.log('\n5. Alice starts the game...');
   const { data: startData, error: startErr } = await aliceClient.rpc('start_game', {
     p_room_id: roomId,
   });
@@ -122,6 +147,15 @@ async function runRoundGameplayTest() {
     .eq('user_id', bobUser.id);
   assert(!bMatchesErr, 'Failed to fetch Bob matches: ' + bMatchesErr?.message);
   assert(bobMatches.length === 3, `Bob should have 3 secret matches, got ${bobMatches.length}`);
+
+  const { data: charlieMatches, error: cMatchesErr } = await charlieClient
+    .from('player_round_matches')
+    .select('profile_id')
+    .eq('room_id', roomId)
+    .eq('round_number', 1)
+    .eq('user_id', charlieUser.id);
+  assert(!cMatchesErr, 'Failed to fetch Charlie matches: ' + cMatchesErr?.message);
+  assert(charlieMatches.length === 3, `Charlie should have 3 secret matches, got ${charlieMatches.length}`);
 
   // Verify Alice (looking for Man) only got Men as secret matches
   const profileMap = new Map(aliceState.profiles.map(p => [p.id, p]));
@@ -201,8 +235,8 @@ async function runRoundGameplayTest() {
   assert(fourthErr && fourthErr.message.includes('already liked 3 profiles'), 'Exceeding 3 likes should be rejected');
   console.log(`   ✓ 4th like correctly rejected: "${fourthErr.message}"`);
 
-  // 12. Bob likes 2 profiles
-  console.log('\n12. Bob likes 2 profiles...');
+  // 12. Bob likes 3 profiles
+  console.log('\n12. Bob likes 3 profiles...');
   const bobMatchIdSet = new Set(bobMatches.map(m => m.profile_id));
   const bobMatch1 = bobState.profiles.find(p => bobMatchIdSet.has(p.id));
   const bobNonMatch = bobState.profiles.find(p => !bobMatchIdSet.has(p.id));
@@ -212,18 +246,28 @@ async function runRoundGameplayTest() {
   assert(bLike1.is_match === true, 'Bob match 1 is true');
   const { data: bLike2 } = await bobClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: bobNonMatch.id });
   assert(bLike2.is_match === false, 'Bob non-match is false');
-  console.log(`   ✓ Bob submitted 2 likes (likes_count=2, round_completed=false).`);
-
-  // 13. Bob submits 3rd like -> triggers room auto-advance to Round 2!
-  console.log('\n13. Bob submits 3rd like (all players now completed 3 likes)...');
-  const { data: bLike3, error: bLike3Err } = await bobClient.rpc('submit_like', {
-    p_room_id: roomId,
-    p_profile_id: bobMatch2.id,
-  });
-  assert(!bLike3Err, 'Bob like 3 failed: ' + bLike3Err?.message);
+  const { data: bLike3 } = await bobClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: bobMatch2.id });
   assert(bLike3.round_completed === true, 'Bob round_completed should be true');
-  assert(bLike3.round_advanced === true, 'Round should immediately advance to next round!');
-  assert(bLike3.current_round === 2, 'Current round should now be 2');
+  assert(bLike3.round_advanced === false, 'Round should not advance yet because Charlie is still swiping');
+  console.log(`   ✓ Bob completed 3 likes (round waiting for Charlie).`);
+
+  // 13. Charlie (who selected both Man and Woman) likes 3 profiles -> triggers room auto-advance!
+  console.log('\n13. Charlie (selected both Man & Woman) likes 3 profiles (all players now completed)...');
+  const charlieMatchIdSet = new Set(charlieMatches.map(m => m.profile_id));
+  const charlieMatch1 = aliceState.profiles.find(p => charlieMatchIdSet.has(p.id));
+  const charlieNonMatch = aliceState.profiles.find(p => !charlieMatchIdSet.has(p.id));
+  const charlieMatch2 = aliceState.profiles.find(p => charlieMatchIdSet.has(p.id) && p.id !== charlieMatch1.id);
+
+  await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieMatch1.id });
+  await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieNonMatch.id });
+  const { data: cLike3, error: cLike3Err } = await charlieClient.rpc('submit_like', {
+    p_room_id: roomId,
+    p_profile_id: charlieMatch2.id,
+  });
+  assert(!cLike3Err, 'Charlie like 3 failed: ' + cLike3Err?.message);
+  assert(cLike3.round_completed === true, 'Charlie round_completed should be true');
+  assert(cLike3.round_advanced === true, 'Round should immediately advance to next round!');
+  assert(cLike3.current_round === 2, 'Current round should now be 2');
   console.log('   ✓ Round automatically advanced to Round 2! 🎉');
 
   // 14. Verify Round 2 state

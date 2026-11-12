@@ -130,11 +130,23 @@ function saveName(name) {
 }
 
 function getSavedLookingFor() {
-  return localStorage.getItem(STORAGE_KEY_LOOKING_FOR) || 'Anything That Moves';
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOOKING_FOR);
+    if (!raw) return [];
+    if (raw === 'Both' || raw === 'Anything That Moves') return ['Man', 'Woman'];
+    if (raw === 'Man') return ['Man'];
+    if (raw === 'Woman') return ['Woman'];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
 }
 
 function saveLookingFor(val) {
-  if (val) {
+  if (Array.isArray(val)) {
+    localStorage.setItem(STORAGE_KEY_LOOKING_FOR, JSON.stringify(val));
+  } else if (typeof val === 'string') {
     localStorage.setItem(STORAGE_KEY_LOOKING_FOR, val);
   }
 }
@@ -241,35 +253,72 @@ function hideAlert() {
 
 alertClose.addEventListener('click', hideAlert);
 
-// Pill Radio Group Helpers
-function setPillRadioValue(groupEl, hiddenInputEl, value) {
-  if (!groupEl || !hiddenInputEl) return;
-  hiddenInputEl.value = value;
-  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
-  buttons.forEach((btn) => {
-    const isMatch = btn.getAttribute('data-value') === value;
-    btn.classList.toggle('active', isMatch);
-    btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
-  });
+// Pill Toggle Group Helpers (Supports selecting Man, Woman, or Both)
+function getPillGroupSelectedValues(groupEl) {
+  if (!groupEl) return [];
+  const activeBtns = groupEl.querySelectorAll('.pill-radio-btn.active');
+  return Array.from(activeBtns).map((b) => b.getAttribute('data-value'));
 }
 
-function initPillRadioGroup(groupEl, hiddenInputEl, onSelect) {
+function computeLookingForValue(selectedArr) {
+  const hasMan = selectedArr.includes('Man');
+  const hasWoman = selectedArr.includes('Woman');
+  if (hasMan && hasWoman) return 'Both';
+  if (hasMan) return 'Man';
+  if (hasWoman) return 'Woman';
+  return '';
+}
+
+function setPillToggleSelections(groupEl, hiddenInputEl, selectedArr) {
+  if (!groupEl || !hiddenInputEl) return;
+  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
+  buttons.forEach((btn) => {
+    const val = btn.getAttribute('data-value');
+    const isSelected = selectedArr.includes(val);
+    btn.classList.toggle('active', isSelected);
+    btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+  });
+  hiddenInputEl.value = computeLookingForValue(selectedArr);
+}
+
+function initPillToggleGroup(groupEl, hiddenInputEl, onChange) {
   if (!groupEl || !hiddenInputEl) return;
   const buttons = groupEl.querySelectorAll('.pill-radio-btn');
   buttons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const val = btn.getAttribute('data-value');
-      setPillRadioValue(groupEl, hiddenInputEl, val);
-      saveLookingFor(val);
-      if (onSelect) onSelect(val);
+      let currentSelected = getPillGroupSelectedValues(groupEl);
+      if (currentSelected.includes(val)) {
+        currentSelected = currentSelected.filter((v) => v !== val);
+      } else {
+        currentSelected.push(val);
+      }
+      setPillToggleSelections(groupEl, hiddenInputEl, currentSelected);
+      saveLookingFor(currentSelected);
+      if (onChange) onChange();
     });
   });
+}
+
+function updateHostFormValidity() {
+  const name = hostPlayerName.value.trim();
+  const lookingFor = hostLookingForInput?.value || '';
+  const isValid = name.length > 0 && lookingFor.length > 0;
+  btnConfirmCreateRoom.disabled = !isValid;
+}
+
+function updateJoinFormValidity() {
+  const name = joinPlayerName.value.trim();
+  const lookingFor = joinLookingForInput?.value || '';
+  const isValid = name.length > 0 && lookingFor.length > 0;
+  btnJoinGame.disabled = !isValid;
 }
 
 // Modals
 function openHostModal() {
   hostPlayerName.value = getSavedName();
-  setPillRadioValue(hostLookingForGroup, hostLookingForInput, getSavedLookingFor());
+  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, getSavedLookingFor());
+  updateHostFormValidity();
   hostModal.classList.remove('hidden');
   hostPlayerName.focus();
 }
@@ -1020,14 +1069,17 @@ btnCancelHost.addEventListener('click', closeHostModal);
 
 btnConfirmCreateRoom.addEventListener('click', async () => {
   const name = hostPlayerName.value.trim();
-  const lookingFor = hostLookingForInput?.value || 'Anything That Moves';
+  const lookingFor = hostLookingForInput?.value || '';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
+  if (!lookingFor) {
+    showAlert('Please select who you are looking for (Man, Woman, or both).');
+    return;
+  }
 
   saveName(name);
-  saveLookingFor(lookingFor);
   btnConfirmCreateRoom.disabled = true;
   btnConfirmCreateRoom.textContent = 'Creating...';
 
@@ -1040,12 +1092,17 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
   } finally {
     btnConfirmCreateRoom.disabled = false;
     btnConfirmCreateRoom.textContent = 'Start Game';
+    updateHostFormValidity();
   }
 });
 
+hostPlayerName.addEventListener('input', updateHostFormValidity);
+
 hostPlayerName.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    btnConfirmCreateRoom.click();
+    if (!btnConfirmCreateRoom.disabled) {
+      btnConfirmCreateRoom.click();
+    }
   }
 });
 
@@ -1058,14 +1115,17 @@ btnJoinGame.addEventListener('click', async () => {
   }
 
   const name = joinPlayerName.value.trim();
-  const lookingFor = joinLookingForInput?.value || 'Anything That Moves';
+  const lookingFor = joinLookingForInput?.value || '';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
+  if (!lookingFor) {
+    showAlert('Please select who you are looking for (Man, Woman, or both).');
+    return;
+  }
 
   saveName(name);
-  saveLookingFor(lookingFor);
   btnJoinGame.disabled = true;
   btnJoinGame.textContent = 'Joining...';
 
@@ -1078,12 +1138,17 @@ btnJoinGame.addEventListener('click', async () => {
   } finally {
     btnJoinGame.disabled = false;
     btnJoinGame.textContent = 'Join Game';
+    updateJoinFormValidity();
   }
 });
 
+joinPlayerName.addEventListener('input', updateJoinFormValidity);
+
 joinPlayerName.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    btnJoinGame.click();
+    if (!btnJoinGame.disabled) {
+      btnJoinGame.click();
+    }
   }
 });
 
@@ -1183,8 +1248,8 @@ btnLeaveActiveGame.addEventListener('click', async () => {
 // App Initialization
 async function init() {
   initSwipeGestures();
-  initPillRadioGroup(hostLookingForGroup, hostLookingForInput);
-  initPillRadioGroup(joinLookingForGroup, joinLookingForInput);
+  initPillToggleGroup(hostLookingForGroup, hostLookingForInput, updateHostFormValidity);
+  initPillToggleGroup(joinLookingForGroup, joinLookingForInput, updateJoinFormValidity);
 
   try {
     currentUser = await ensureAnonymousSession();
@@ -1228,7 +1293,8 @@ async function init() {
       hostCard.classList.add('hidden');
       joinCard.classList.remove('hidden');
       joinPlayerName.value = getSavedName();
-      setPillRadioValue(joinLookingForGroup, joinLookingForInput, getSavedLookingFor());
+      setPillToggleSelections(joinLookingForGroup, joinLookingForInput, getSavedLookingFor());
+      updateJoinFormValidity();
       joinPlayerName.focus();
     } catch (err) {
       showAlert('Room not found or invite expired.');
