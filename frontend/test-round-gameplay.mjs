@@ -39,23 +39,27 @@ async function runRoundGameplayTest() {
   console.log(`   ✓ Alice ID: ${aliceUser.id}`);
   console.log(`   ✓ Bob ID: ${bobUser.id}`);
 
-  // 2. Host creates room
-  console.log('\n2. Alice creates room...');
+  // 2. Host creates room with looking_for: 'Man'
+  console.log('\n2. Alice creates room (Looking for: "Man")...');
   const { data: roomData, error: createErr } = await aliceClient.rpc('create_room', {
     p_display_name: 'Alice',
+    p_looking_for: 'Man',
   });
   assert(!createErr, 'Failed to create room: ' + createErr?.message);
   const roomId = roomData.room.id;
-  console.log(`   ✓ Room created: ${roomId}`);
+  assert(roomData.player.looking_for === 'Man', 'Alice looking_for should be Man');
+  console.log(`   ✓ Room created: ${roomId}, Alice looking_for: ${roomData.player.looking_for}`);
 
-  // 3. Bob joins room
-  console.log('\n3. Bob joins room...');
+  // 3. Bob joins room with looking_for: 'Woman'
+  console.log('\n3. Bob joins room (Looking for: "Woman")...');
   const { data: joinData, error: joinErr } = await bobClient.rpc('join_room', {
     p_room_id: roomId,
     p_display_name: 'Bob',
+    p_looking_for: 'Woman',
   });
   assert(!joinErr, 'Failed to join room: ' + joinErr?.message);
-  console.log(`   ✓ Bob seated: Seat ${joinData.player.seat_number}`);
+  assert(joinData.player.looking_for === 'Woman', 'Bob looking_for should be Woman');
+  console.log(`   ✓ Bob seated: Seat ${joinData.player.seat_number}, looking_for: ${joinData.player.looking_for}`);
 
   // 4. Start game
   console.log('\n4. Alice starts the game...');
@@ -92,14 +96,15 @@ async function runRoundGameplayTest() {
   // Check profile fields
   const sampleProfile = aliceState.profiles[0];
   assert(sampleProfile.name && sampleProfile.age, 'Profile has name and age');
+  assert(sampleProfile.gender === 'man' || sampleProfile.gender === 'woman', 'Profile has gender (man/woman)');
   assert(sampleProfile.bio, 'Profile has bio');
   assert(sampleProfile.red_flags?.length > 0, 'Profile has red flags');
   assert(sampleProfile.green_flags?.length > 0, 'Profile has green flags');
   assert(sampleProfile.avatar_svg?.includes('<svg'), 'Profile has embedded SVG avatar');
-  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}), ${sampleProfile.occupation}`);
+  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}, gender: ${sampleProfile.gender}), ${sampleProfile.occupation}`);
 
-  // 6. Check secret matches
-  console.log('\n6. Checking secret matches in DB for Round 1...');
+  // 6. Check secret matches and gender targeting
+  console.log('\n6. Checking secret matches and gender preference targeting for Round 1...');
   const { data: aliceMatches, error: aMatchesErr } = await aliceClient
     .from('player_round_matches')
     .select('profile_id')
@@ -117,7 +122,21 @@ async function runRoundGameplayTest() {
     .eq('user_id', bobUser.id);
   assert(!bMatchesErr, 'Failed to fetch Bob matches: ' + bMatchesErr?.message);
   assert(bobMatches.length === 3, `Bob should have 3 secret matches, got ${bobMatches.length}`);
-  console.log('   ✓ Exactly 3 secret matches assigned to each player.');
+
+  // Verify Alice (looking for Man) only got Men as secret matches
+  const profileMap = new Map(aliceState.profiles.map(p => [p.id, p]));
+  for (const m of aliceMatches) {
+    const p = profileMap.get(m.profile_id);
+    assert(p && p.gender === 'man', `Alice (Looking for Man) matched with non-man: ${p?.name} (${p?.gender})`);
+  }
+  console.log('   ✓ Alice (Looking for Man): 100% of secret matches are Men!');
+
+  // Verify Bob (looking for Woman) only got Women as secret matches
+  for (const m of bobMatches) {
+    const p = profileMap.get(m.profile_id);
+    assert(p && p.gender === 'woman', `Bob (Looking for Woman) matched with non-woman: ${p?.name} (${p?.gender})`);
+  }
+  console.log('   ✓ Bob (Looking for Woman): 100% of secret matches are Women!');
 
   const aliceMatchIdSet = new Set(aliceMatches.map(m => m.profile_id));
   const nonMatchForAlice = aliceState.profiles.find(p => !aliceMatchIdSet.has(p.id));

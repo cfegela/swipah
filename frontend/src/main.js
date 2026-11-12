@@ -117,6 +117,7 @@ function escapeHtml(str) {
 
 // Helpers: Local Storage
 const STORAGE_KEY_NAME = 'swipah_player_name';
+const STORAGE_KEY_LOOKING_FOR = 'swipah_looking_for';
 
 function getSavedName() {
   return localStorage.getItem(STORAGE_KEY_NAME) || '';
@@ -125,6 +126,16 @@ function getSavedName() {
 function saveName(name) {
   if (name) {
     localStorage.setItem(STORAGE_KEY_NAME, name.trim());
+  }
+}
+
+function getSavedLookingFor() {
+  return localStorage.getItem(STORAGE_KEY_LOOKING_FOR) || 'Anything That Moves';
+}
+
+function saveLookingFor(val) {
+  if (val) {
+    localStorage.setItem(STORAGE_KEY_LOOKING_FOR, val);
   }
 }
 
@@ -154,11 +165,15 @@ const joinCard = document.getElementById('join-card');
 
 const hostModal = document.getElementById('host-modal');
 const hostPlayerName = document.getElementById('host-player-name');
+const hostLookingForGroup = document.getElementById('host-looking-for-group');
+const hostLookingForInput = document.getElementById('host-looking-for');
 const btnOpenHostPrompt = document.getElementById('btn-open-host-prompt');
 const btnCancelHost = document.getElementById('btn-cancel-host');
 const btnConfirmCreateRoom = document.getElementById('btn-confirm-create-room');
 
 const joinPlayerName = document.getElementById('join-player-name');
+const joinLookingForGroup = document.getElementById('join-looking-for-group');
+const joinLookingForInput = document.getElementById('join-looking-for');
 const btnJoinGame = document.getElementById('btn-join-game');
 
 const qrModal = document.getElementById('qr-modal');
@@ -226,9 +241,35 @@ function hideAlert() {
 
 alertClose.addEventListener('click', hideAlert);
 
+// Pill Radio Group Helpers
+function setPillRadioValue(groupEl, hiddenInputEl, value) {
+  if (!groupEl || !hiddenInputEl) return;
+  hiddenInputEl.value = value;
+  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
+  buttons.forEach((btn) => {
+    const isMatch = btn.getAttribute('data-value') === value;
+    btn.classList.toggle('active', isMatch);
+    btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+  });
+}
+
+function initPillRadioGroup(groupEl, hiddenInputEl, onSelect) {
+  if (!groupEl || !hiddenInputEl) return;
+  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-value');
+      setPillRadioValue(groupEl, hiddenInputEl, val);
+      saveLookingFor(val);
+      if (onSelect) onSelect(val);
+    });
+  });
+}
+
 // Modals
 function openHostModal() {
   hostPlayerName.value = getSavedName();
+  setPillRadioValue(hostLookingForGroup, hostLookingForInput, getSavedLookingFor());
   hostModal.classList.remove('hidden');
   hostPlayerName.focus();
 }
@@ -979,17 +1020,19 @@ btnCancelHost.addEventListener('click', closeHostModal);
 
 btnConfirmCreateRoom.addEventListener('click', async () => {
   const name = hostPlayerName.value.trim();
+  const lookingFor = hostLookingForInput?.value || 'Anything That Moves';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
 
   saveName(name);
+  saveLookingFor(lookingFor);
   btnConfirmCreateRoom.disabled = true;
   btnConfirmCreateRoom.textContent = 'Creating...';
 
   try {
-    const data = await createRoom(name);
+    const data = await createRoom(name, lookingFor);
     closeHostModal();
     showLobbyView(data.room, [data.player]);
   } catch (err) {
@@ -1015,17 +1058,19 @@ btnJoinGame.addEventListener('click', async () => {
   }
 
   const name = joinPlayerName.value.trim();
+  const lookingFor = joinLookingForInput?.value || 'Anything That Moves';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
 
   saveName(name);
+  saveLookingFor(lookingFor);
   btnJoinGame.disabled = true;
   btnJoinGame.textContent = 'Joining...';
 
   try {
-    const data = await joinRoom(roomId, name);
+    const data = await joinRoom(roomId, name, lookingFor);
     const { room, players } = await fetchRoom(roomId);
     showLobbyView(room, players);
   } catch (err) {
@@ -1138,6 +1183,8 @@ btnLeaveActiveGame.addEventListener('click', async () => {
 // App Initialization
 async function init() {
   initSwipeGestures();
+  initPillRadioGroup(hostLookingForGroup, hostLookingForInput);
+  initPillRadioGroup(joinLookingForGroup, joinLookingForInput);
 
   try {
     currentUser = await ensureAnonymousSession();
@@ -1181,6 +1228,7 @@ async function init() {
       hostCard.classList.add('hidden');
       joinCard.classList.remove('hidden');
       joinPlayerName.value = getSavedName();
+      setPillRadioValue(joinLookingForGroup, joinLookingForInput, getSavedLookingFor());
       joinPlayerName.focus();
     } catch (err) {
       showAlert('Room not found or invite expired.');

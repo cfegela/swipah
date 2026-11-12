@@ -229,6 +229,57 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(213, 75, 38, 0.25);
 }
 
+/* Clickable Pill Radio Buttons */
+.pill-radio-group {
+  display: flex;
+  gap: 0.45rem;
+  width: 100%;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.pill-radio-btn {
+  flex: 1 1 auto;
+  min-height: 42px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  touch-action: manipulation;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.pill-radio-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pill-radio-btn.active {
+  background: var(--swipah-gradient) !important;
+  border-color: var(--swipah-flame) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(184, 40, 27, 0.45);
+}
+
+.pill-radio-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
