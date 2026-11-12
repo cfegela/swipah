@@ -125,6 +125,38 @@
         </div>
       </div>
 
+      <!-- Round Start Modal -->
+      <div id="round-start-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="text-align: center; max-width: 420px;">
+          <div style="font-size: 2.75rem; margin-bottom: 0.25rem; line-height: 1;">🔥</div>
+          <h2 id="modal-round-title" style="font-size: 1.85rem; font-weight: 800; margin-bottom: 0.35rem; color: #fff;">Round 1</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+            Browse through 10 profiles. You have <strong style="color: #fff;">3 likes</strong> this round, and <strong style="color: var(--accent);">3 profiles</strong> like you back. Can you find your matches?
+          </p>
+          <button id="btn-start-round" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+            Start Swiping 🔥
+          </button>
+        </div>
+      </div>
+
+      <!-- It's a Match Modal -->
+      <div id="match-modal" class="modal-overlay hidden">
+        <div class="modal-card match-modal-card" style="text-align: center; max-width: 440px;">
+          <div class="match-badge">🔥 IT'S A MATCH! 🔥</div>
+          <div class="match-avatars-row">
+            <div class="match-avatar match-avatar-player" id="match-player-avatar">You</div>
+            <div class="match-avatar match-avatar-profile" id="match-profile-avatar"></div>
+          </div>
+          <h2 id="match-profile-name" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.35rem; color: #fff;">Matched!</h2>
+          <p id="match-profile-desc" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+            You and Chad liked each other!
+          </p>
+          <button id="btn-close-match-modal" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+            Keep Swiping
+          </button>
+        </div>
+      </div>
+
       <!-- VIEW 2: GAME LOBBY -->
       <main id="lobby-view" class="hidden">
         <div class="card">
@@ -160,23 +192,69 @@
         </div>
       </main>
 
-      <!-- VIEW 3: ACTIVE GAME (Placeholder for match view) -->
+      <!-- VIEW 3: ACTIVE GAME (Simultaneous Swiping Match) -->
       <main id="game-view" class="hidden">
-        <div class="card" style="text-align: center;">
-          <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Swipah Match</h2>
-          <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem;">
-            The game has started! Swiping mechanics and profile cards will be implemented in the next step.
-          </p>
-          <div id="game-players-list" style="margin-bottom: 1.75rem; text-align: left; background: rgba(0, 0, 34, 0.6); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
-            <!-- Populated dynamically with active players -->
+        <!-- Game HUD Status Bar -->
+        <div class="game-hud-bar">
+          <div class="hud-stats-group">
+            <div class="hud-stat-box">
+              <span class="hud-label">Round</span>
+              <span class="hud-value" id="hud-round-number">1</span>
+            </div>
+            <div class="hud-stat-box">
+              <span class="hud-label">Likes Left</span>
+              <span class="hud-value" id="hud-likes-remaining">3/3</span>
+            </div>
+            <div class="hud-stat-box">
+              <span class="hud-label">Matches</span>
+              <span class="hud-value hud-matches-value" id="hud-matches-count">0 🔥</span>
+            </div>
           </div>
-          <div class="actions-row" style="justify-content: center;">
-            <button id="btn-end-active-game" class="btn btn-danger" style="display: none;">
+          <div class="hud-actions-group">
+            <button id="btn-end-active-game" class="btn btn-danger btn-sm" style="display: none;">
               End Game
             </button>
-            <button id="btn-leave-active-game" class="btn btn-secondary" style="display: none;">
+            <button id="btn-leave-active-game" class="btn btn-secondary btn-sm" style="display: none;">
               Leave Game
             </button>
+          </div>
+        </div>
+
+        <!-- Waiting Card (shown when player used 3 likes and opponents are still swiping) -->
+        <div id="waiting-round-overlay" class="card waiting-card hidden" style="text-align: center; margin-bottom: 1.25rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">⏳</div>
+          <h3 style="font-size: 1.35rem; margin-bottom: 0.35rem;">You're All Swiped Out!</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
+            You used all 3 likes for this round. Waiting for other players to finish swiping...
+          </p>
+          <div id="waiting-players-list" style="display: flex; flex-direction: column; gap: 0.5rem; text-align: left; background: rgba(0, 0, 34, 0.6); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color);">
+            <!-- Dynamic player completion status -->
+          </div>
+        </div>
+
+        <!-- Profile Deck Section -->
+        <div class="profile-swipe-section" id="profile-swipe-section">
+          <!-- Profile Card Container (Touch and Pointer drag enabled) -->
+          <div class="profile-card-wrapper" id="profile-card-wrapper">
+            <!-- Dynamically populated profile card -->
+          </div>
+
+          <!-- Bottom Action Controls: Prev, Heart Like, Next -->
+          <div class="profile-action-bar">
+            <button id="btn-prev-profile" class="btn-circle btn-nav" title="Previous profile (or swipe right)" aria-label="Previous profile">
+              ◀
+            </button>
+            <button id="btn-like-profile" class="btn-circle btn-heart" title="Like profile" aria-label="Like profile">
+              <span class="heart-icon">❤️</span>
+            </button>
+            <button id="btn-next-profile" class="btn-circle btn-nav" title="Next profile (or swipe left)" aria-label="Next profile">
+              ▶
+            </button>
+          </div>
+
+          <!-- Pagination Indicator (e.g. 1 of 10) -->
+          <div class="profile-counter-pill" id="profile-counter-pill">
+            Profile <span id="current-profile-num">1</span> of <span id="total-profiles-num">10</span>
           </div>
         </div>
       </main>

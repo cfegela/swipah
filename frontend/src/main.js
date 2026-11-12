@@ -8,13 +8,20 @@ import {
   leaveRoom,
   subscribeToRoom,
   startGame,
-  fetchRoomTurnState,
+  fetchGameRoundState,
+  submitLike,
 } from './supabase.js';
 
 // Application State
 let currentUser = null;
 let currentRoom = null;
 let currentPlayers = [];
+let currentRoundProfiles = [];
+let currentProfileIdx = 0;
+let myLikes = [];
+let lastSeenRound = 0;
+let isSubmittingLike = false;
+
 let unsubscribeRealtime = null;
 let currentSubscribedRoomId = null;
 let lobbyPollInterval = null;
@@ -64,7 +71,7 @@ async function playChime() {
     }
 
     const now = ctx.currentTime;
-    // Pleasant ascending chime: F5 (698Hz) -> A5 (880Hz) -> C6 (1046Hz)
+    // Ascending melody chime: F5 (698Hz) -> A5 (880Hz) -> C6 (1046Hz)
     const notes = [
       { freq: 698.46, time: now, dur: 0.25, peak: 0.16 },
       { freq: 880.00, time: now + 0.08, dur: 0.25, peak: 0.18 },
@@ -137,7 +144,7 @@ function setRoomUrl(roomId) {
   window.history.pushState({}, '', url.toString());
 }
 
-// DOM Elements
+// DOM Elements: Views
 const landingView = document.getElementById('landing-view');
 const lobbyView = document.getElementById('lobby-view');
 const gameView = document.getElementById('game-view');
@@ -162,10 +169,24 @@ const endGameModal = document.getElementById('end-game-modal');
 const btnCancelEndGame = document.getElementById('btn-cancel-end-game');
 const btnConfirmEndGame = document.getElementById('btn-confirm-end-game');
 
+// DOM Elements: Round Start & Match Modals
+const roundStartModal = document.getElementById('round-start-modal');
+const modalRoundTitle = document.getElementById('modal-round-title');
+const btnStartRound = document.getElementById('btn-start-round');
+
+const matchModal = document.getElementById('match-modal');
+const matchPlayerAvatar = document.getElementById('match-player-avatar');
+const matchProfileAvatar = document.getElementById('match-profile-avatar');
+const matchProfileName = document.getElementById('match-profile-name');
+const matchProfileDesc = document.getElementById('match-profile-desc');
+const btnCloseMatchModal = document.getElementById('btn-close-match-modal');
+
+// DOM Elements: Alerts
 const alertBox = document.getElementById('alert-box');
 const alertMsg = document.getElementById('alert-msg');
 const alertClose = document.getElementById('alert-close');
 
+// DOM Elements: Lobby
 const seatsGrid = document.getElementById('seats-grid');
 const playerCount = document.getElementById('player-count');
 const hostInviteControls = document.getElementById('host-invite-controls');
@@ -174,9 +195,23 @@ const btnCopyLink = document.getElementById('btn-copy-link');
 const btnShowQr = document.getElementById('btn-show-qr');
 const btnStartGame = document.getElementById('btn-start-game');
 
-const gamePlayersList = document.getElementById('game-players-list');
+// DOM Elements: Game HUD & Controls
+const hudRoundNumber = document.getElementById('hud-round-number');
+const hudLikesRemaining = document.getElementById('hud-likes-remaining');
+const hudMatchesCount = document.getElementById('hud-matches-count');
 const btnEndActiveGame = document.getElementById('btn-end-active-game');
 const btnLeaveActiveGame = document.getElementById('btn-leave-active-game');
+
+// DOM Elements: Profile Swipe Deck & Waiting Area
+const waitingRoundOverlay = document.getElementById('waiting-round-overlay');
+const waitingPlayersList = document.getElementById('waiting-players-list');
+const profileSwipeSection = document.getElementById('profile-swipe-section');
+const profileCardWrapper = document.getElementById('profile-card-wrapper');
+const btnPrevProfile = document.getElementById('btn-prev-profile');
+const btnLikeProfile = document.getElementById('btn-like-profile');
+const btnNextProfile = document.getElementById('btn-next-profile');
+const currentProfileNum = document.getElementById('current-profile-num');
+const totalProfilesNum = document.getElementById('total-profiles-num');
 
 // Alerts
 function showAlert(message, type = 'error') {
@@ -205,13 +240,18 @@ function closeHostModal() {
 function openQrModal() {
   if (!currentRoom) return;
   const joinUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoom.id}`;
-  QRCode.toCanvas(qrCanvas, joinUrl, { width: 200, margin: 1, color: { dark: '#000022', light: '#ffffff' } }, (err) => {
-    if (err) {
-      showAlert('Failed to generate QR code: ' + err.message);
-      return;
+  QRCode.toCanvas(
+    qrCanvas,
+    joinUrl,
+    { width: 200, margin: 1, color: { dark: '#000022', light: '#ffffff' } },
+    (err) => {
+      if (err) {
+        showAlert('Failed to generate QR code: ' + err.message);
+        return;
+      }
+      qrModal.classList.remove('hidden');
     }
-    qrModal.classList.remove('hidden');
-  });
+  );
 }
 
 function closeQrModal() {
@@ -224,6 +264,39 @@ function openEndGameModal() {
 
 function closeEndGameModal() {
   endGameModal.classList.add('hidden');
+}
+
+function openRoundStartModal(roundNumber) {
+  modalRoundTitle.textContent = `Round ${roundNumber}`;
+  roundStartModal.classList.remove('hidden');
+}
+
+function closeRoundStartModal() {
+  roundStartModal.classList.add('hidden');
+}
+
+function openMatchModal(profile) {
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const playerInitial = (myPlayer?.display_name || 'Y').charAt(0).toUpperCase();
+
+  matchPlayerAvatar.textContent = playerInitial;
+  matchProfileAvatar.innerHTML = profile.avatar_svg || '';
+  matchProfileName.textContent = `Matched with ${profile.name}!`;
+  matchProfileDesc.textContent = `You and ${profile.name} liked each other! 🔥`;
+
+  matchModal.classList.remove('hidden');
+}
+
+function closeMatchModal() {
+  matchModal.classList.add('hidden');
+  if (myLikes.length >= 3) {
+    showWaitingOverlay();
+  } else {
+    if (currentProfileIdx < currentRoundProfiles.length - 1) {
+      currentProfileIdx++;
+    }
+    renderCurrentProfile();
+  }
 }
 
 // Polling
@@ -260,8 +333,57 @@ function startLobbyPolling(roomId) {
         currentPlayers = latestPlayers;
         renderSeats();
       }
-    } catch (err) {
+    } catch (_) {
       // Ignore transient polling errors
+    }
+  }, 2500);
+}
+
+function startGamePolling(roomId) {
+  if (gamePollInterval) clearInterval(gamePollInterval);
+  if (!roomId) return;
+
+  gamePollInterval = setInterval(async () => {
+    if (!currentRoom || currentRoom.status !== 'in_progress' || currentRoom.id !== roomId) return;
+    try {
+      const state = await fetchGameRoundState(roomId);
+      if (!state || !state.room) return;
+
+      if (state.room.status === 'abandoned') {
+        stopPolling();
+        showAlert('The host closed this game.', 'error');
+        showLandingView();
+        return;
+      }
+
+      // Check if round advanced
+      if (state.room.current_round > currentRoom.current_round) {
+        currentRoom = state.room;
+        currentPlayers = state.players || currentPlayers;
+        currentRoundProfiles = state.profiles || [];
+        myLikes = state.my_likes || [];
+        lastSeenRound = state.room.current_round;
+        currentProfileIdx = 0;
+
+        updateHUD();
+        profileSwipeSection.classList.remove('hidden');
+        waitingRoundOverlay.classList.add('hidden');
+        renderCurrentProfile();
+        openRoundStartModal(currentRoom.current_round);
+        playChime();
+        return;
+      }
+
+      // Update player states in waiting overlay
+      if (state.players) {
+        currentPlayers = state.players;
+        updateHUD();
+        if (myLikes.length >= 3) {
+          renderWaitingPlayersList();
+        }
+      }
+    } catch (_) {
+      // Ignore transient errors
     }
   }, 2500);
 }
@@ -282,13 +404,24 @@ function setupRealtimeSubscription(roomId) {
     // On players change
     async () => {
       try {
-        const { players: updatedPlayers } = await fetchRoom(roomId);
-        if (updatedPlayers) {
-          const hadFewer = updatedPlayers.length > currentPlayers.length;
-          currentPlayers = updatedPlayers;
-          renderSeats();
-          if (hadFewer) {
-            playChime();
+        if (currentRoom && currentRoom.status === 'in_progress') {
+          const state = await fetchGameRoundState(roomId);
+          if (state && state.players) {
+            currentPlayers = state.players;
+            updateHUD();
+            if (myLikes.length >= 3) {
+              renderWaitingPlayersList();
+            }
+          }
+        } else {
+          const { players: updatedPlayers } = await fetchRoom(roomId);
+          if (updatedPlayers) {
+            const hadFewer = updatedPlayers.length > currentPlayers.length;
+            currentPlayers = updatedPlayers;
+            renderSeats();
+            if (hadFewer) {
+              playChime();
+            }
           }
         }
       } catch (err) {
@@ -299,16 +432,35 @@ function setupRealtimeSubscription(roomId) {
     async (payload) => {
       const updatedRoom = payload.new;
       if (!updatedRoom) return;
-      currentRoom = updatedRoom;
 
       if (updatedRoom.status === 'in_progress') {
-        stopPolling();
-        playChime();
-        loadAndShowGameView();
+        if (!currentRoom || currentRoom.status !== 'in_progress' || updatedRoom.current_round > (currentRoom.current_round || 0)) {
+          currentRoom = updatedRoom;
+          playChime();
+          loadAndShowGameView();
+        }
       } else if (updatedRoom.status === 'abandoned') {
         stopPolling();
         showAlert('The host closed this room.', 'error');
         showLandingView();
+      }
+    },
+    // On likes change
+    async () => {
+      if (currentRoom && currentRoom.status === 'in_progress') {
+        try {
+          const state = await fetchGameRoundState(roomId);
+          if (state) {
+            currentPlayers = state.players || currentPlayers;
+            updateHUD();
+            if (state.room.current_round > currentRoom.current_round) {
+              currentRoom = state.room;
+              loadAndShowGameView();
+            } else if (myLikes.length >= 3) {
+              renderWaitingPlayersList();
+            }
+          }
+        } catch (_) {}
       }
     }
   );
@@ -401,11 +553,17 @@ function showLandingView() {
   currentSubscribedRoomId = null;
   currentRoom = null;
   currentPlayers = [];
+  currentRoundProfiles = [];
+  currentProfileIdx = 0;
+  myLikes = [];
+  lastSeenRound = 0;
 
   setRoomUrl(null);
   closeHostModal();
   closeQrModal();
   closeEndGameModal();
+  closeRoundStartModal();
+  matchModal.classList.add('hidden');
 
   btnEndActiveGame.style.display = 'none';
   btnLeaveActiveGame.style.display = 'none';
@@ -419,42 +577,399 @@ function showLandingView() {
   joinCard.classList.add('hidden');
 }
 
-// Switch to Active Game Placeholder View
-function loadAndShowGameView() {
+// Update Game HUD
+function updateHUD() {
+  if (hudRoundNumber) {
+    hudRoundNumber.textContent = currentRoom?.current_round || 1;
+  }
+  if (hudLikesRemaining) {
+    const likesLeft = Math.max(0, 3 - myLikes.length);
+    hudLikesRemaining.textContent = `${likesLeft}/3`;
+  }
+  if (hudMatchesCount) {
+    const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+    hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} 🔥`;
+  }
+}
+
+// Show Waiting Screen
+function showWaitingOverlay() {
+  profileSwipeSection.classList.add('hidden');
+  waitingRoundOverlay.classList.remove('hidden');
+  renderWaitingPlayersList();
+}
+
+// Render Waiting List of Opponents
+function renderWaitingPlayersList() {
+  if (!waitingPlayersList) return;
+  waitingPlayersList.innerHTML = currentPlayers
+    .map((p) => {
+      const isMe = p.user_id === currentUser?.id;
+      const isDone = p.round_completed || (p.likes_count >= 3);
+      const initial = (p.display_name || '?').charAt(0).toUpperCase();
+
+      return `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--swipah-gradient); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff;">
+              ${escapeHtml(initial)}
+            </div>
+            <div>
+              <span style="font-weight: 700; font-size: 0.9rem;">Player ${p.seat_number}</span>
+              <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.35rem;">(${escapeHtml(p.display_name)})</span>
+              ${isMe ? '<span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-left: 0.35rem;">(You)</span>' : ''}
+            </div>
+          </div>
+          <div>
+            ${
+              isDone
+                ? '<span style="color: #4ade80; font-weight: 700; font-size: 0.85rem;">Ready (3/3) ✅</span>'
+                : `<span style="color: #ff916b; font-size: 0.85rem;">Swiping... (${p.likes_count || 0}/3) ⏳</span>`
+            }
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+// Render Currently Viewed Profile
+function renderCurrentProfile() {
+  if (!profileCardWrapper) return;
+
+  if (!currentRoundProfiles || currentRoundProfiles.length === 0) {
+    profileCardWrapper.innerHTML = `
+      <div class="dating-profile-card" style="display: flex; align-items: center; justify-content: center; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-muted);">Loading round profiles...</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Bound index safely
+  if (currentProfileIdx < 0) currentProfileIdx = 0;
+  if (currentProfileIdx >= currentRoundProfiles.length) {
+    currentProfileIdx = currentRoundProfiles.length - 1;
+  }
+
+  const profile = currentRoundProfiles[currentProfileIdx];
+  const likeInfo = myLikes.find((l) => l.profile_id === profile.id);
+  const isLiked = !!likeInfo;
+
+  // Counter
+  currentProfileNum.textContent = currentProfileIdx + 1;
+  totalProfilesNum.textContent = currentRoundProfiles.length;
+
+  // Nav buttons
+  btnPrevProfile.disabled = currentProfileIdx === 0;
+  btnNextProfile.disabled = currentProfileIdx === currentRoundProfiles.length - 1;
+
+  // Like button
+  if (isLiked) {
+    btnLikeProfile.classList.add('btn-liked');
+    btnLikeProfile.disabled = true;
+    btnLikeProfile.title = 'Already liked';
+  } else if (myLikes.length >= 3) {
+    btnLikeProfile.classList.remove('btn-liked');
+    btnLikeProfile.disabled = true;
+    btnLikeProfile.title = 'No likes remaining this round';
+  } else {
+    btnLikeProfile.classList.remove('btn-liked');
+    btnLikeProfile.disabled = false;
+    btnLikeProfile.title = 'Like profile';
+  }
+
+  const redFlagsHtml = (profile.red_flags || [])
+    .map(
+      (rf) => `
+      <div class="flag-item flag-red">
+        <span>🚩</span>
+        <span>${escapeHtml(rf)}</span>
+      </div>
+    `
+    )
+    .join('');
+
+  const greenFlagsHtml = (profile.green_flags || [])
+    .map(
+      (gf) => `
+      <div class="flag-item flag-green">
+        <span>🟢</span>
+        <span>${escapeHtml(gf)}</span>
+      </div>
+    `
+    )
+    .join('');
+
+  const stampHtml = isLiked
+    ? `<div class="liked-stamp">${likeInfo.is_match ? "IT'S A MATCH! 🔥" : 'LIKED ❤️'}</div>`
+    : '';
+
+  profileCardWrapper.innerHTML = `
+    <div class="dating-profile-card" id="active-profile-card">
+      ${stampHtml}
+      <div class="profile-hero">
+        ${profile.avatar_svg || ''}
+        <div class="profile-hero-gradient"></div>
+        <div class="profile-header-overlay">
+          <span class="profile-name">${escapeHtml(profile.name)}</span>
+          <span class="profile-age">${profile.age}</span>
+          <span class="profile-verified-badge" title="Verified Parody">✓</span>
+        </div>
+      </div>
+      <div class="profile-content">
+        <div class="profile-meta-tags">
+          <span class="meta-tag">💼 ${escapeHtml(profile.occupation)}</span>
+          <span class="meta-tag">📍 ${escapeHtml(profile.location)}</span>
+        </div>
+        <div class="profile-bio">
+          ${escapeHtml(profile.bio)}
+        </div>
+        ${
+          redFlagsHtml
+            ? `
+          <div class="flags-section">
+            <div class="flags-title">Red Flags</div>
+            <div class="flags-list">${redFlagsHtml}</div>
+          </div>
+        `
+            : ''
+        }
+        ${
+          greenFlagsHtml
+            ? `
+          <div class="flags-section">
+            <div class="flags-title">Green Flags</div>
+            <div class="flags-list">${greenFlagsHtml}</div>
+          </div>
+        `
+            : ''
+        }
+        ${
+          profile.prompt_question
+            ? `
+          <div class="prompt-card">
+            <div class="prompt-question">${escapeHtml(profile.prompt_question)}</div>
+            <div class="prompt-answer">${escapeHtml(profile.prompt_answer)}</div>
+          </div>
+        `
+            : ''
+        }
+      </div>
+    </div>
+  `;
+}
+
+// Horizontal Finger / Touch Drag Swiping Gestures
+let touchStartX = 0;
+let touchStartY = 0;
+let isPointerDragging = false;
+let isPointerSwiping = false;
+
+function initSwipeGestures() {
+  if (!profileCardWrapper) return;
+
+  profileCardWrapper.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    touchStartX = e.clientX;
+    touchStartY = e.clientY;
+    isPointerDragging = true;
+    isPointerSwiping = false;
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!isPointerDragging) return;
+    const card = profileCardWrapper.querySelector('.dating-profile-card');
+    if (!card) return;
+
+    const diffX = e.clientX - touchStartX;
+    const diffY = e.clientY - touchStartY;
+
+    if (!isPointerSwiping) {
+      if (Math.abs(diffX) > 12 && Math.abs(diffX) > Math.abs(diffY)) {
+        isPointerSwiping = true;
+        card.classList.add('dragging');
+      } else if (Math.abs(diffY) > 12) {
+        // Vertical scroll within the card content - abort horizontal swipe
+        isPointerDragging = false;
+        return;
+      }
+    }
+
+    if (isPointerSwiping) {
+      const rotation = diffX * 0.035;
+      card.style.transform = `translateX(${diffX}px) rotate(${rotation}deg)`;
+      card.style.opacity = `${Math.max(0.35, 1 - Math.abs(diffX) / 450)}`;
+    }
+  });
+
+  const handlePointerEnd = (e) => {
+    if (!isPointerDragging) return;
+    const card = profileCardWrapper.querySelector('.dating-profile-card');
+    isPointerDragging = false;
+
+    if (!card) return;
+    card.classList.remove('dragging');
+
+    if (!isPointerSwiping) return;
+    isPointerSwiping = false;
+
+    const diffX = e.clientX - touchStartX;
+    const SWIPE_THRESHOLD = 50;
+
+    if (diffX < -SWIPE_THRESHOLD && currentProfileIdx < currentRoundProfiles.length - 1) {
+      // Swiped Left -> Next Profile
+      card.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      card.style.transform = 'translateX(-120%) rotate(-12deg)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        currentProfileIdx++;
+        renderCurrentProfile();
+      }, 180);
+    } else if (diffX > SWIPE_THRESHOLD && currentProfileIdx > 0) {
+      // Swiped Right -> Previous Profile
+      card.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      card.style.transform = 'translateX(120%) rotate(12deg)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        currentProfileIdx--;
+        renderCurrentProfile();
+      }, 180);
+    } else {
+      // Snap back to center
+      card.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      card.style.transform = '';
+      card.style.opacity = '';
+    }
+  };
+
+  window.addEventListener('pointerup', handlePointerEnd);
+  window.addEventListener('pointercancel', handlePointerEnd);
+}
+
+// Like Profile Action (Only triggered by clicking ❤️ button)
+async function handleLikeProfile() {
+  if (isSubmittingLike || !currentRoom) return;
+  const profile = currentRoundProfiles[currentProfileIdx];
+  if (!profile) return;
+
+  if (myLikes.some((l) => l.profile_id === profile.id)) {
+    return;
+  }
+
+  if (myLikes.length >= 3) {
+    showAlert('You have already used all 3 likes for this round.', 'info');
+    return;
+  }
+
+  isSubmittingLike = true;
+  btnLikeProfile.disabled = true;
+
+  try {
+    const res = await submitLike(currentRoom.id, profile.id);
+
+    // Save to local likes
+    myLikes.push({
+      profile_id: profile.id,
+      is_match: res.is_match,
+      created_at: new Date().toISOString(),
+    });
+
+    // Update player status
+    const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+    if (myPlayer) {
+      myPlayer.likes_count = res.likes_count;
+      myPlayer.matches_count = res.matches_count;
+      myPlayer.round_completed = res.round_completed;
+    }
+
+    updateHUD();
+
+    if (res.is_match) {
+      playChime();
+      openMatchModal(profile);
+    }
+
+    if (res.round_advanced) {
+      // All players in room finished 3 likes -> immediately advance to next round!
+      await loadAndShowGameView();
+    } else if (res.round_completed) {
+      // Current player finished all 3 likes -> show waiting screen if match modal is not open
+      if (!res.is_match) {
+        showWaitingOverlay();
+      }
+    } else {
+      // Likes remaining
+      if (!res.is_match) {
+        renderCurrentProfile();
+        // Auto-advance to next profile after 280ms
+        if (currentProfileIdx < currentRoundProfiles.length - 1) {
+          setTimeout(() => {
+            currentProfileIdx++;
+            renderCurrentProfile();
+          }, 280);
+        }
+      }
+    }
+  } catch (err) {
+    showAlert(err.message || 'Failed to submit like.');
+  } finally {
+    isSubmittingLike = false;
+  }
+}
+
+// Switch to Active Game View
+async function loadAndShowGameView() {
   document.getElementById('app').classList.add('in-lobby');
   landingView.classList.add('hidden');
   lobbyView.classList.add('hidden');
   gameView.classList.remove('hidden');
 
-  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
-  const isHost = !!myPlayer?.is_host;
+  try {
+    const state = await fetchGameRoundState(currentRoom.id);
+    if (!state || !state.room) {
+      throw new Error('Failed to load round state');
+    }
 
-  if (isHost) {
-    btnEndActiveGame.style.display = 'inline-flex';
-    btnLeaveActiveGame.style.display = 'none';
-  } else {
-    btnEndActiveGame.style.display = 'none';
-    btnLeaveActiveGame.style.display = 'inline-flex';
-  }
+    currentRoom = state.room;
+    currentPlayers = state.players || currentPlayers;
+    currentRoundProfiles = state.profiles || [];
+    myLikes = state.my_likes || [];
 
-  // Render players list in active game
-  if (gamePlayersList) {
-    gamePlayersList.innerHTML = `
-      <h4 style="margin-bottom: 0.75rem; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Players in Match (${currentPlayers.length})</h4>
-      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        ${currentPlayers.map(p => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="font-weight: 700;">Player ${p.seat_number}:</span>
-              <span>${escapeHtml(p.display_name)}</span>
-              ${p.is_host ? '<span style="font-size: 0.75rem; color: #ff916b;">(Host)</span>' : ''}
-              ${p.user_id === currentUser?.id ? '<span style="font-size: 0.75rem; color: var(--accent); font-weight: 700;">(You)</span>' : ''}
-            </div>
-            <span style="color: #4ade80; font-size: 0.8rem;">Ready</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+    const isHost = !!myPlayer?.is_host;
+
+    if (isHost) {
+      btnEndActiveGame.style.display = 'inline-flex';
+      btnLeaveActiveGame.style.display = 'none';
+    } else {
+      btnEndActiveGame.style.display = 'none';
+      btnLeaveActiveGame.style.display = 'inline-flex';
+    }
+
+    updateHUD();
+
+    // Check if new round
+    if (currentRoom.current_round !== lastSeenRound) {
+      lastSeenRound = currentRoom.current_round;
+      currentProfileIdx = 0;
+      openRoundStartModal(currentRoom.current_round);
+      playChime();
+    }
+
+    // Check if player has already used all 3 likes
+    if (myLikes.length >= 3) {
+      showWaitingOverlay();
+    } else {
+      waitingRoundOverlay.classList.add('hidden');
+      profileSwipeSection.classList.remove('hidden');
+      renderCurrentProfile();
+    }
+
+    // Start active game polling
+    startGamePolling(currentRoom.id);
+  } catch (err) {
+    showAlert('Error loading game: ' + err.message);
   }
 }
 
@@ -562,8 +1077,28 @@ btnStartGame.addEventListener('click', async () => {
   }
 });
 
+// Event Listeners: In-Game Action Controls
+btnPrevProfile.addEventListener('click', () => {
+  if (currentProfileIdx > 0) {
+    currentProfileIdx--;
+    renderCurrentProfile();
+  }
+});
 
+btnNextProfile.addEventListener('click', () => {
+  if (currentProfileIdx < currentRoundProfiles.length - 1) {
+    currentProfileIdx++;
+    renderCurrentProfile();
+  }
+});
 
+btnLikeProfile.addEventListener('click', handleLikeProfile);
+
+btnStartRound.addEventListener('click', closeRoundStartModal);
+
+btnCloseMatchModal.addEventListener('click', closeMatchModal);
+
+// Event Listeners: End & Leave Game
 btnCancelEndGame.addEventListener('click', closeEndGameModal);
 
 btnConfirmEndGame.addEventListener('click', async () => {
@@ -585,20 +1120,25 @@ btnConfirmEndGame.addEventListener('click', async () => {
 
 btnEndActiveGame.addEventListener('click', openEndGameModal);
 
-btnLeaveActiveGame.addEventListener('click', () => {
+btnLeaveActiveGame.addEventListener('click', async () => {
   if (!currentRoom) return;
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
   if (myPlayer?.is_host) {
     openEndGameModal();
   } else {
-    leaveRoom(currentRoom.id)
-      .then(() => showLandingView())
-      .catch((err) => showAlert('Failed to leave game: ' + err.message));
+    try {
+      await leaveRoom(currentRoom.id);
+      showLandingView();
+    } catch (err) {
+      showAlert('Failed to leave game: ' + err.message);
+    }
   }
 });
 
 // App Initialization
 async function init() {
+  initSwipeGestures();
+
   try {
     currentUser = await ensureAnonymousSession();
   } catch (err) {
@@ -609,7 +1149,6 @@ async function init() {
   const inviteRoomId = getQueryParam('room');
 
   if (inviteRoomId) {
-    // If room query param exists, verify room validity
     try {
       const { room, players } = await fetchRoom(inviteRoomId);
       if (room.status === 'abandoned') {

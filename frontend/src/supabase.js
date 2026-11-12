@@ -138,6 +138,31 @@ export async function startGame(roomId) {
 }
 
 /**
+ * Submit a like on a profile in the current round.
+ */
+export async function submitLike(roomId, profileId) {
+  const { data, error } = await supabase.rpc('submit_like', {
+    p_room_id: roomId,
+    p_profile_id: profileId,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetch the full game round state (room, players, 10 round profiles, player's likes).
+ */
+export async function fetchGameRoundState(roomId) {
+  const { data, error } = await supabase.rpc('fetch_game_round_state', {
+    p_room_id: roomId,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Leave a room.
  */
 export async function leaveRoom(roomId) {
@@ -152,7 +177,7 @@ export async function leaveRoom(roomId) {
 /**
  * Subscribe to realtime table changes for players and room state.
  */
-export function subscribeToRoom(roomId, onPlayersChange, onRoomChange, onStatusChange) {
+export function subscribeToRoom(roomId, onPlayersChange, onRoomChange, onLikesChange, onStatusChange) {
   const channel = supabase.channel(`room:${roomId}`)
     .on(
       'postgres_changes',
@@ -176,6 +201,18 @@ export function subscribeToRoom(roomId, onPlayersChange, onRoomChange, onStatusC
       },
       (payload) => {
         onRoomChange && onRoomChange(payload);
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'player_profile_likes',
+        filter: `room_id=eq.${roomId}`,
+      },
+      (payload) => {
+        onLikesChange && onLikesChange(payload);
       }
     )
     .subscribe((status) => {

@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "wrangler dev",
     "test": "node test-lobby.mjs",
+    "test:gameplay": "node test-round-gameplay.mjs",
     "test:mobile": "node test-mobile-widths.mjs",
+    "test:all": "node test-lobby.mjs && node test-round-gameplay.mjs && node test-mobile-widths.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
