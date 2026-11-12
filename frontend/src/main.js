@@ -337,7 +337,7 @@ function renderSeats() {
         ${player.is_host ? '<div class="status-host-badge">👑 Host</div>' : ''}
         <div class="seat-header">
           <span>Seat ${seatNum}</span>
-          ${isMe ? '<span style="color: var(--tinder-pink); font-weight: 800;">(You)</span>' : ''}
+          ${isMe ? '<span style="color: var(--accent); font-weight: 800;">(You)</span>' : ''}
         </div>
         <div class="seat-avatar">${escapeHtml(initial)}</div>
         <div class="seat-name">${escapeHtml(player.display_name)}</div>
@@ -442,7 +442,7 @@ function loadAndShowGameView() {
               <span style="font-weight: 700;">Seat ${p.seat_number}:</span>
               <span>${escapeHtml(p.display_name)}</span>
               ${p.is_host ? '<span style="font-size: 0.75rem; color: #ff916b;">(Host)</span>' : ''}
-              ${p.user_id === currentUser?.id ? '<span style="font-size: 0.75rem; color: var(--tinder-pink); font-weight: 700;">(You)</span>' : ''}
+              ${p.user_id === currentUser?.id ? '<span style="font-size: 0.75rem; color: var(--accent); font-weight: 700;">(You)</span>' : ''}
             </div>
             <span style="color: #4ade80; font-size: 0.8rem;">Ready</span>
           </div>

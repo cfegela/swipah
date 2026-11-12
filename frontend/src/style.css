@@ -1,20 +1,32 @@
 :root {
+  /* Dark Swipah midnight canvas matching SVG artwork #000223 / #000022 */
   --bg-primary: #000022;
-  --bg-secondary: #0c1033;
-  --bg-card: #0d1238;
-  --bg-card-hover: #141b4d;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(253, 38, 125, 0.35);
+  --bg-secondary: #080a26;
+  --bg-card: #090d2a;
+  --bg-card-hover: #10153d;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(184, 40, 27, 0.35);
+  --border-card-accent: rgba(122, 12, 35, 0.45);
   --text-main: #ffffff;
   --text-muted: #9ba3c7;
   
-  /* Tinder flame warm gradient palette */
-  --tinder-pink: #fd267d;
-  --tinder-orange: #ff6036;
-  --tinder-gradient: linear-gradient(135deg, #fd267d 0%, #ff6036 100%);
-  --tinder-gradient-hover: linear-gradient(135deg, #e01f6d 0%, #f05229 100%);
-  --accent: #fd267d;
-  --accent-secondary: #ff6036;
+  /* Swipah darker warm tones scanned directly from SVG artwork */
+  --swipah-wine-dark: #44101c;
+  --swipah-wine: #7a0c23;
+  --swipah-crimson: #991032;
+  --swipah-ember: #b8281b;
+  --swipah-flame: #d54b26;
+  --swipah-orange: #fb5107;
+
+  /* Moody gradient: deep wine to rich burnt flame ember */
+  --swipah-gradient: linear-gradient(135deg, #7a0c23 0%, #b8281b 45%, #d54b26 80%, #fb5107 100%);
+  --swipah-gradient-hover: linear-gradient(135deg, #8e112b 0%, #ce3122 45%, #e6552e 80%, #fb5d19 100%);
+  --swipah-gradient-dark: linear-gradient(135deg, #44101c 0%, #7a0c23 50%, #b8281b 100%);
+
+  --accent: #fb5107;
+  --accent-secondary: #d54b26;
+  --accent-wine: #7a0c23;
 
   --success: #10b981;
   --success-bg: rgba(16, 185, 129, 0.15);
@@ -40,8 +52,8 @@ html, body {
 body {
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(253, 38, 125, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 96, 54, 0.08) 0%, transparent 40%);
+    radial-gradient(circle at 50% 0%, rgba(122, 12, 35, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(213, 75, 38, 0.08) 0%, transparent 45%);
   background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-family);
@@ -104,7 +116,7 @@ header {
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: 1.75rem 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(253, 38, 125, 0.05);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 25px rgba(122, 12, 35, 0.12);
   backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
@@ -117,8 +129,8 @@ header {
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--tinder-gradient);
-  opacity: 0.8;
+  background: var(--swipah-gradient);
+  opacity: 0.9;
 }
 
 /* Typography */
@@ -158,8 +170,8 @@ input[type="text"] {
 }
 
 input[type="text"]:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(253, 38, 125, 0.25);
+  border-color: var(--swipah-flame);
+  box-shadow: 0 0 0 3px rgba(213, 75, 38, 0.25);
 }
 
 /* Buttons */
@@ -188,15 +200,15 @@ input[type="text"]:focus {
 }
 
 .btn-primary {
-  background: var(--tinder-gradient);
+  background: var(--swipah-gradient);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(253, 38, 125, 0.35);
+  box-shadow: 0 4px 18px rgba(184, 40, 27, 0.4);
 }
 
 .btn-primary:not(:disabled):hover {
-  background: var(--tinder-gradient-hover);
+  background: var(--swipah-gradient-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(253, 38, 125, 0.5);
+  box-shadow: 0 6px 22px rgba(213, 75, 38, 0.5);
 }
 
 .btn-primary:not(:disabled):active {
@@ -292,14 +304,14 @@ input[type="text"]:focus {
 }
 
 .seat-card.seat-occupied {
-  background: rgba(13, 18, 56, 0.85);
-  border-color: var(--border-glow);
-  box-shadow: 0 4px 15px rgba(253, 38, 125, 0.12);
+  background: rgba(10, 14, 42, 0.85);
+  border-color: rgba(184, 40, 27, 0.4);
+  box-shadow: 0 4px 18px rgba(122, 12, 35, 0.2);
 }
 
 .seat-card.seat-me {
-  border-color: var(--tinder-pink);
-  box-shadow: 0 0 20px rgba(253, 38, 125, 0.25);
+  border-color: var(--swipah-flame);
+  box-shadow: 0 0 22px rgba(213, 75, 38, 0.3);
 }
 
 .seat-card.seat-empty {
@@ -323,14 +335,14 @@ input[type="text"]:focus {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--tinder-gradient);
+  background: var(--swipah-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.35rem;
   font-weight: 800;
   color: #fff;
-  box-shadow: 0 3px 10px rgba(253, 38, 125, 0.3);
+  box-shadow: 0 3px 12px rgba(122, 12, 35, 0.45);
   margin-bottom: 0.25rem;
 }
 
@@ -379,8 +391,8 @@ input[type="text"]:focus {
   top: 10px;
   right: 10px;
   font-size: 0.75rem;
-  background: rgba(255, 96, 54, 0.2);
-  border: 1px solid rgba(255, 96, 54, 0.4);
+  background: rgba(122, 12, 35, 0.4);
+  border: 1px solid rgba(213, 75, 38, 0.5);
   color: #ff916b;
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
@@ -409,7 +421,7 @@ input[type="text"]:focus {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 34, 0.85);
+  background: rgba(0, 0, 34, 0.88);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -426,7 +438,7 @@ input[type="text"]:focus {
   padding: 2rem 1.75rem;
   max-width: 480px;
   width: 100%;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(253, 38, 125, 0.15);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(122, 12, 35, 0.2);
   animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
