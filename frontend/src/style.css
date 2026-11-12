@@ -280,6 +280,12 @@ input[type="text"]:focus {
   outline-offset: 2px;
 }
 
+.label-looking-for {
+  display: block;
+  margin-bottom: 0.65rem !important;
+  padding-bottom: 0.15rem;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -309,10 +315,12 @@ input[type="text"]:focus {
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+  filter: grayscale(0.7);
+  pointer-events: none;
 }
 
 .btn-primary {

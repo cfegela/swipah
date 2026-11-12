@@ -317,7 +317,7 @@ function updateJoinFormValidity() {
 // Modals
 function openHostModal() {
   hostPlayerName.value = getSavedName();
-  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, getSavedLookingFor());
+  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, []);
   updateHostFormValidity();
   hostModal.classList.remove('hidden');
   hostPlayerName.focus();
@@ -1248,8 +1248,12 @@ btnLeaveActiveGame.addEventListener('click', async () => {
 // App Initialization
 async function init() {
   initSwipeGestures();
+  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, []);
+  setPillToggleSelections(joinLookingForGroup, joinLookingForInput, []);
   initPillToggleGroup(hostLookingForGroup, hostLookingForInput, updateHostFormValidity);
   initPillToggleGroup(joinLookingForGroup, joinLookingForInput, updateJoinFormValidity);
+  updateHostFormValidity();
+  updateJoinFormValidity();
 
   try {
     currentUser = await ensureAnonymousSession();
@@ -1293,7 +1297,7 @@ async function init() {
       hostCard.classList.add('hidden');
       joinCard.classList.remove('hidden');
       joinPlayerName.value = getSavedName();
-      setPillToggleSelections(joinLookingForGroup, joinLookingForInput, getSavedLookingFor());
+      setPillToggleSelections(joinLookingForGroup, joinLookingForInput, []);
       updateJoinFormValidity();
       joinPlayerName.focus();
     } catch (err) {
