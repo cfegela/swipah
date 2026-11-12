@@ -205,7 +205,7 @@ function closeHostModal() {
 function openQrModal() {
   if (!currentRoom) return;
   const joinUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoom.id}`;
-  QRCode.toCanvas(qrCanvas, joinUrl, { width: 220, margin: 1, color: { dark: '#000022', light: '#ffffff' } }, (err) => {
+  QRCode.toCanvas(qrCanvas, joinUrl, { width: 200, margin: 1, color: { dark: '#000022', light: '#ffffff' } }, (err) => {
     if (err) {
       showAlert('Failed to generate QR code: ' + err.message);
       return;
@@ -407,6 +407,9 @@ function showLandingView() {
   closeQrModal();
   closeEndGameModal();
 
+  btnEndActiveGame.style.display = 'none';
+  btnLeaveActiveGame.style.display = 'none';
+
   document.getElementById('app').classList.remove('in-lobby');
   lobbyView.classList.add('hidden');
   gameView.classList.add('hidden');
@@ -424,12 +427,14 @@ function loadAndShowGameView() {
   gameView.classList.remove('hidden');
 
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
-  const isHost = myPlayer?.is_host;
+  const isHost = !!myPlayer?.is_host;
 
   if (isHost) {
     btnEndActiveGame.style.display = 'inline-flex';
+    btnLeaveActiveGame.style.display = 'none';
   } else {
     btnEndActiveGame.style.display = 'none';
+    btnLeaveActiveGame.style.display = 'inline-flex';
   }
 
   // Render players list in active game

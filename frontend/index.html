@@ -98,8 +98,8 @@
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.75rem;">
             Scan with any phone camera to join this room instantly.
           </p>
-          <div style="background: #ffffff; padding: 12px; border-radius: 12px; display: inline-flex; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 0.5rem;">
-            <canvas id="qr-canvas"></canvas>
+          <div style="background: #ffffff; padding: 10px; border-radius: 12px; display: inline-flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 0.5rem; max-width: 100%; box-sizing: border-box;">
+            <canvas id="qr-canvas" style="max-width: 100%; height: auto; display: block;"></canvas>
           </div>
           <button id="btn-close-qr" class="btn btn-secondary" style="width: 100%;">
             Close
@@ -163,9 +163,6 @@
       <!-- VIEW 3: ACTIVE GAME (Placeholder for match view) -->
       <main id="game-view" class="hidden">
         <div class="card" style="text-align: center;">
-          <div style="display: inline-block; padding: 0.35rem 0.85rem; background: rgba(122, 12, 35, 0.4); border: 1px solid var(--swipah-flame); border-radius: 9999px; font-size: 0.85rem; font-weight: 700; color: #ff916b; margin-bottom: 1rem;">
-            🔥 Match In Progress
-          </div>
           <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Swipah Match</h2>
           <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem;">
             The game has started! Swiping mechanics and profile cards will be implemented in the next step.
@@ -175,9 +172,9 @@
           </div>
           <div class="actions-row" style="justify-content: center;">
             <button id="btn-end-active-game" class="btn btn-danger" style="display: none;">
-              End Game (Host)
+              End Game
             </button>
-            <button id="btn-leave-active-game" class="btn btn-secondary">
+            <button id="btn-leave-active-game" class="btn btn-secondary" style="display: none;">
               Leave Game
             </button>
           </div>
