@@ -173,7 +173,6 @@ const lobbyWaitMsg = document.getElementById('lobby-wait-msg');
 const btnCopyLink = document.getElementById('btn-copy-link');
 const btnShowQr = document.getElementById('btn-show-qr');
 const btnStartGame = document.getElementById('btn-start-game');
-const btnLeaveLobby = document.getElementById('btn-leave-lobby');
 
 const gamePlayersList = document.getElementById('game-players-list');
 const btnEndActiveGame = document.getElementById('btn-end-active-game');
@@ -334,10 +333,9 @@ function renderSeats() {
       const initial = (player.display_name || '?').charAt(0).toUpperCase();
 
       seatEl.innerHTML = `
-        ${player.is_host ? '<div class="status-host-badge">👑 Host</div>' : ''}
+        ${player.is_host ? '<div class="status-host-badge">Host</div>' : ''}
         <div class="seat-header">
-          <span>Seat ${seatNum}</span>
-          ${isMe ? '<span style="color: var(--accent); font-weight: 800;">(You)</span>' : ''}
+          <span>Player ${seatNum}</span>
         </div>
         <div class="seat-avatar">${escapeHtml(initial)}</div>
         <div class="seat-name">${escapeHtml(player.display_name)}</div>
@@ -349,7 +347,7 @@ function renderSeats() {
       seatEl.className = 'seat-card seat-empty';
       seatEl.innerHTML = `
         <div class="seat-header">
-          <span>Seat ${seatNum}</span>
+          <span>Player ${seatNum}</span>
         </div>
         <div class="seat-avatar-empty">+</div>
         <div class="seat-name" style="font-size: 0.95rem; color: var(--text-muted);">Empty Slot</div>
@@ -439,7 +437,7 @@ function loadAndShowGameView() {
         ${currentPlayers.map(p => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="font-weight: 700;">Seat ${p.seat_number}:</span>
+              <span style="font-weight: 700;">Player ${p.seat_number}:</span>
               <span>${escapeHtml(p.display_name)}</span>
               ${p.is_host ? '<span style="font-size: 0.75rem; color: #ff916b;">(Host)</span>' : ''}
               ${p.user_id === currentUser?.id ? '<span style="font-size: 0.75rem; color: var(--accent); font-weight: 700;">(You)</span>' : ''}
@@ -556,17 +554,7 @@ btnStartGame.addEventListener('click', async () => {
   }
 });
 
-btnLeaveLobby.addEventListener('click', () => {
-  if (!currentRoom) return;
-  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
-  if (myPlayer?.is_host) {
-    openEndGameModal();
-  } else {
-    leaveRoom(currentRoom.id)
-      .then(() => showLandingView())
-      .catch((err) => showAlert('Failed to leave room: ' + err.message));
-  }
-});
+
 
 btnCancelEndGame.addEventListener('click', closeEndGameModal);
 
