@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swipah — Online Multiplayer</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="logo-wrapper">
+          <img
+            src="/swipah-logo-final.svg"
+            alt="Swipah logo"
+            class="hero-logo"
+          />
+        </div>
+      </header>
+
+      <!-- Alert Notification Area -->
+      <div id="alert-box" class="alert alert-error hidden">
+        <span id="alert-msg"></span>
+        <button id="alert-close" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">✕</button>
+      </div>
+
+      <!-- VIEW 1: LANDING / HOME -->
+      <main id="landing-view">
+        <!-- Host Game Card (Default Homepage View) -->
+        <div id="host-card" class="card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2 style="margin-bottom: 0.75rem; font-size: 1.6rem;">Host a Game</h2>
+          <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem; line-height: 1.5;">
+            Start a fresh game and get a link to share with friends.<br />
+            No account or login required.
+          </p>
+          <button id="btn-open-host-prompt" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+            Start New Game
+          </button>
+        </div>
+
+        <!-- Join Game Card (Shown when an invite link ?room=UUID is opened) -->
+        <div id="join-card" class="card hidden" style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2 style="margin-bottom: 0.5rem; font-size: 1.6rem;">Join Game</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
+            You've been invited to join an online game of <strong>Swipah</strong>!
+          </p>
+          <div class="form-group" style="text-align: left;">
+            <label for="join-player-name">Your Username</label>
+            <input
+              type="text"
+              id="join-player-name"
+              placeholder="Enter your username (e.g. SwipahPro)"
+              maxlength="20"
+              autocomplete="off"
+            />
+          </div>
+          <button id="btn-join-game" class="btn btn-success" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+            Join Game
+          </button>
+        </div>
+
+        <p class="landing-copyright">&copy; 2026 Simplah Software</p>
+      </main>
+
+      <!-- Host Username Modal -->
+      <div id="host-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <div>
+            <h3 style="font-size: 1.3rem; margin-bottom: 0.35rem;">Enter Your Username</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Choose a username to host the game.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="host-player-name">Username</label>
+            <input
+              type="text"
+              id="host-player-name"
+              placeholder="e.g. SwipahPro"
+              maxlength="20"
+              autocomplete="off"
+            />
+          </div>
+          <div class="actions-row" style="justify-content: flex-end;">
+            <button id="btn-cancel-host" class="btn btn-secondary">
+              Cancel
+            </button>
+            <button id="btn-confirm-create-room" class="btn btn-primary">
+              Start Game
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Code Modal -->
+      <div id="qr-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="text-align: center; align-items: center;">
+          <h3 style="font-size: 1.3rem; margin-bottom: 0.25rem;">Scan to Join Game</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.75rem;">
+            Scan with any phone camera to join this room instantly.
+          </p>
+          <div style="background: #ffffff; padding: 12px; border-radius: 12px; display: inline-flex; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 0.5rem;">
+            <canvas id="qr-canvas"></canvas>
+          </div>
+          <button id="btn-close-qr" class="btn btn-secondary" style="width: 100%;">
+            Close
+          </button>
+        </div>
+      </div>
+
+      <!-- End Game Confirmation Modal -->
+      <div id="end-game-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="text-align: center;">
+          <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #ef4444;">End Game?</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+            Are you sure you want to end the game? This will close the room and return all players to the home screen.
+          </p>
+          <div class="actions-row" style="justify-content: center;">
+            <button id="btn-cancel-end-game" class="btn btn-secondary" style="flex: 1;">
+              Cancel
+            </button>
+            <button id="btn-confirm-end-game" class="btn btn-danger" style="flex: 1;">
+              End Game
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: GAME LOBBY -->
+      <main id="lobby-view" class="hidden">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Lobby (<span id="player-count">0</span>/4 Players)</h2>
+            <button id="btn-leave-lobby" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+              Leave Room
+            </button>
+          </div>
+
+          <!-- Seats Grid (Seats 1-4) -->
+          <div class="seats-grid" id="seats-grid">
+            <!-- Dynamically populated seats -->
+          </div>
+
+          <!-- Lobby Action Buttons -->
+          <div class="lobby-actions-container" style="margin-top: 1.5rem;">
+            <!-- Host Controls -->
+            <div id="host-invite-controls" class="lobby-buttons-grid hidden">
+              <button id="btn-copy-link" class="btn btn-secondary btn-lobby">
+                Invite Link
+              </button>
+              <button id="btn-show-qr" class="btn btn-secondary btn-lobby">
+                QR Code
+              </button>
+              <button id="btn-start-game" class="btn btn-primary btn-lobby" disabled>
+                Start Game
+              </button>
+            </div>
+
+            <!-- Non-Host Controls -->
+            <div id="lobby-wait-msg" class="hidden" style="text-align: center; color: var(--text-muted); font-size: 0.95rem; padding: 0.5rem 0;">
+              Waiting for host to start the game...
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 3: ACTIVE GAME (Placeholder for match view) -->
+      <main id="game-view" class="hidden">
+        <div class="card" style="text-align: center;">
+          <div style="display: inline-block; padding: 0.35rem 0.85rem; background: rgba(253, 38, 125, 0.2); border: 1px solid var(--tinder-pink); border-radius: 9999px; font-size: 0.85rem; font-weight: 700; color: #ff85ad; margin-bottom: 1rem;">
+            🔥 Match In Progress
+          </div>
+          <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Swipah Match</h2>
+          <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem;">
+            The game has started! Swiping mechanics and profile cards will be implemented in the next step.
+          </p>
+          <div id="game-players-list" style="margin-bottom: 1.75rem; text-align: left; background: rgba(0, 0, 34, 0.6); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+            <!-- Populated dynamically with active players -->
+          </div>
+          <div class="actions-row" style="justify-content: center;">
+            <button id="btn-end-active-game" class="btn btn-danger" style="display: none;">
+              End Game (Host)
+            </button>
+            <button id="btn-leave-active-game" class="btn btn-secondary">
+              Leave Game
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
