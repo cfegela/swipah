@@ -96,14 +96,16 @@ header {
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 380px;
+  max-width: 500px;
   padding: 0 0.5rem;
   margin: 0 auto;
+  box-sizing: border-box;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (min-width: 640px) {
   .logo-wrapper {
-    max-width: 500px;
+    max-width: 520px;
     padding: 0 1rem;
   }
 }
@@ -113,11 +115,25 @@ header {
   max-width: 100%;
   height: auto;
   display: block;
-  transition: transform 0.25s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hero-logo:hover {
   transform: scale(1.015);
+}
+
+/* Compact header when inside the Game Lobby / subsequent pages */
+#app.in-lobby header {
+  padding-bottom: 0.25rem;
+}
+
+#app.in-lobby .logo-wrapper {
+  max-width: 200px;
+  padding: 0;
+}
+
+#app.in-lobby .hero-logo {
+  max-width: 200px;
 }
 
 /* Card Styling */

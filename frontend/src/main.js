@@ -380,6 +380,7 @@ function showLobbyView(room, players) {
   currentRoom = room;
   currentPlayers = players;
 
+  document.getElementById('app').classList.add('in-lobby');
   landingView.classList.add('hidden');
   gameView.classList.add('hidden');
   lobbyView.classList.remove('hidden');
@@ -406,6 +407,7 @@ function showLandingView() {
   closeQrModal();
   closeEndGameModal();
 
+  document.getElementById('app').classList.remove('in-lobby');
   lobbyView.classList.add('hidden');
   gameView.classList.add('hidden');
   landingView.classList.remove('hidden');
@@ -416,6 +418,7 @@ function showLandingView() {
 
 // Switch to Active Game Placeholder View
 function loadAndShowGameView() {
+  document.getElementById('app').classList.add('in-lobby');
   landingView.classList.add('hidden');
   lobbyView.classList.add('hidden');
   gameView.classList.remove('hidden');
