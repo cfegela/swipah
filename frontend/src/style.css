@@ -128,12 +128,21 @@ header {
 }
 
 #app.in-lobby .logo-wrapper {
-  max-width: 200px;
+  max-width: 280px;
   padding: 0;
 }
 
 #app.in-lobby .hero-logo {
-  max-width: 200px;
+  max-width: 280px;
+}
+
+@media (min-width: 640px) {
+  #app.in-lobby .logo-wrapper {
+    max-width: 320px;
+  }
+  #app.in-lobby .hero-logo {
+    max-width: 320px;
+  }
 }
 
 /* Card Styling */
