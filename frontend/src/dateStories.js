@@ -62,7 +62,7 @@ export function getDateStory(profile, outcome) {
 
     case 'murdered':
       title = `A Fatal Encounter with ${name}...`;
-      badgeText = 'YOU WERE MURDERED! (KNOCKED OUT)';
+      badgeText = 'YOU WERE MURDERED!';
       badgeClass = 'date-badge-murdered';
       scoreDeltaText = 'Eliminated (0 pts)';
       paragraphs = [
