@@ -994,12 +994,12 @@ function renderDatingPhase() {
 
     if (myPlayer.date_completed) {
       btnConfirmDateRead.disabled = true;
-      btnConfirmDateRead.textContent = '✓ Finished Reading (Waiting for others...)';
+      btnConfirmDateRead.textContent = '✓ Ready (Waiting for others...)';
       datingPlayersStatusBox.classList.remove('hidden');
       renderDatingChecklist(datingPlayersList);
     } else {
       btnConfirmDateRead.disabled = false;
-      btnConfirmDateRead.textContent = 'I Read My Date to the Group ➔';
+      btnConfirmDateRead.textContent = 'Next Round ➔';
       datingPlayersStatusBox.classList.add('hidden');
     }
     return;
@@ -1075,7 +1075,7 @@ async function handleConfirmDateRead() {
   } catch (err) {
     showAlert(err.message || 'Failed to confirm date completion.');
     btnConfirmDateRead.disabled = false;
-    btnConfirmDateRead.textContent = 'I Read My Date to the Group ➔';
+    btnConfirmDateRead.textContent = 'Next Round ➔';
   } finally {
     isResolvingDate = false;
   }
