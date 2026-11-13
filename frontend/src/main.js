@@ -1171,7 +1171,7 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select who you are looking for (Man, Woman, or both).');
+    showAlert('Please select who you are looking for (Men, Women, or both).');
     return;
   }
 
@@ -1217,7 +1217,7 @@ btnJoinGame.addEventListener('click', async () => {
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select who you are looking for (Man, Woman, or both).');
+    showAlert('Please select who you are looking for (Men, Women, or both).');
     return;
   }
 
