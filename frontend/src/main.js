@@ -791,7 +791,7 @@ function updateHUD() {
   }
   if (hudScoreCount) {
     if (myPlayer?.is_murdered) {
-      hudScoreCount.textContent = '💀 Murdered';
+      hudScoreCount.textContent = 'Murdered';
       hudScoreCount.className = 'hud-value hud-score-value score-murdered';
     } else {
       const score = myPlayer?.score ?? 0;
