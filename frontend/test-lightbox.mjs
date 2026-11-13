@@ -116,7 +116,6 @@ async function run() {
             <div class="profile-hero" id="test-hero">
               <img src="/profiles/chad-thunderclout.jpg" alt="Chad Thunderclout" class="profile-hero-photo" />
               <div class="profile-hero-gradient"></div>
-              <div class="profile-expand-hint">⛶</div>
               <div class="profile-header-overlay">
                 <span class="profile-name">Chad Thunderclout</span>
                 <span class="profile-age">24</span>

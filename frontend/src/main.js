@@ -824,28 +824,15 @@ function renderCurrentProfile() {
     .map((gf) => `<li>${escapeHtml(gf)}</li>`)
     .join('');
 
-  const stampHtml = isLiked
-    ? `<div class="liked-stamp">${likeInfo.is_match ? "IT'S A MATCH! 🔥" : 'LIKED ❤️'}</div>`
-    : '';
-
   const avatarHtml = profile.avatar_url
     ? `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(profile.name)}" class="profile-hero-photo" />`
     : (profile.avatar_svg || '');
 
   profileCardWrapper.innerHTML = `
     <div class="dating-profile-card" id="active-profile-card">
-      ${stampHtml}
       <div class="profile-hero" title="Tap to view full image" role="button" aria-label="Tap to view full image">
         ${avatarHtml}
         <div class="profile-hero-gradient"></div>
-        <div class="profile-expand-hint" aria-hidden="true" title="View full photo">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <polyline points="9 21 3 21 3 15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-        </div>
         <div class="profile-header-overlay">
           <span class="profile-name">${escapeHtml(profile.name)}</span>
           <span class="profile-age">${profile.age}</span>
@@ -1014,7 +1001,7 @@ function initSwipeGestures() {
     } else {
       // Fallback: extract directly from hero DOM
       const photoEl = hero.querySelector('.profile-hero-photo');
-      const svgEl = hero.querySelector('svg:not(.profile-expand-hint svg)');
+      const svgEl = hero.querySelector('svg');
       const nameEl = hero.querySelector('.profile-name');
       const name = nameEl ? nameEl.textContent.trim() : '';
 
