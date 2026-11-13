@@ -357,12 +357,15 @@ input[type="text"]:focus {
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #991b1b, #7a0c23);
+  border: 1px solid rgba(220, 38, 38, 0.35);
   color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-danger:not(:disabled):hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: linear-gradient(135deg, #b91c1c, #881337);
+  border-color: rgba(239, 68, 68, 0.5);
   transform: translateY(-1px);
 }
 
