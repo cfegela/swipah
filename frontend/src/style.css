@@ -1016,26 +1016,30 @@ input[type="text"]:focus {
 }
 
 .btn-heart {
-  width: 68px;
-  height: 68px;
-  background: var(--swipah-gradient);
-  box-shadow: 0 6px 22px rgba(184, 40, 27, 0.5);
-  font-size: 1.9rem;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-heart:not(:disabled):hover {
-  background: var(--swipah-gradient-hover);
-  transform: scale(1.1);
-  box-shadow: 0 8px 28px rgba(213, 75, 38, 0.65);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #f87171;
+  transform: scale(1.08);
 }
 
 .btn-heart:not(:disabled):active {
-  transform: scale(0.92);
+  transform: scale(0.95);
 }
 
 .btn-heart.btn-liked {
-  background: #22c55e !important;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4) !important;
+  background: rgba(34, 197, 94, 0.12) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  color: #22c55e !important;
+  box-shadow: none !important;
 }
 
 /* Counter Pill */
