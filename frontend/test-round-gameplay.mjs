@@ -112,11 +112,27 @@ async function runRoundGameplayTest() {
   assert(bobState.profiles.length === 10, 'Bob should also see 10 round profiles');
   assert(bobState.my_likes.length === 0, 'Bob initial likes should be 0');
 
-  // Verify both players see the identical 10 profiles in the same order
-  const aliceProfileIds = aliceState.profiles.map(p => p.id);
-  const bobProfileIds = bobState.profiles.map(p => p.id);
-  assert(JSON.stringify(aliceProfileIds) === JSON.stringify(bobProfileIds), 'Both players must see the same 10 profiles in round 1');
-  console.log('   ✓ Both players received the exact same 10 profiles.');
+  // Fetch Charlie state
+  const { data: charlieState, error: charlieStateErr } = await charlieClient.rpc('fetch_game_round_state', {
+    p_room_id: roomId
+  });
+  assert(!charlieStateErr, 'Charlie fetch state failed: ' + charlieStateErr?.message);
+  assert(charlieState.profiles.length === 10, 'Charlie should see 10 round profiles');
+
+  // Verify gender filtering per player preference:
+  // Alice (looking for Man): 100% of profiles are Men!
+  assert(aliceState.profiles.every(p => p.gender === 'man'), 'Alice (looking for Man) must see ONLY men');
+  console.log('   ✓ Alice (Looking for Men): 100% of profiles in deck are Men (0 women seen).');
+
+  // Bob (looking for Woman): 100% of profiles are Women!
+  assert(bobState.profiles.every(p => p.gender === 'woman'), 'Bob (looking for Woman) must see ONLY women');
+  console.log('   ✓ Bob (Looking for Women): 100% of profiles in deck are Women (0 men seen).');
+
+  // Charlie (looking for Both): exactly 5 Men and 5 Women (50/50 split)!
+  const charlieMen = charlieState.profiles.filter(p => p.gender === 'man');
+  const charlieWomen = charlieState.profiles.filter(p => p.gender === 'woman');
+  assert(charlieMen.length === 5 && charlieWomen.length === 5, 'Charlie (looking for Both) must see a 50/50 split (5 men, 5 women)');
+  console.log('   ✓ Charlie (Looking for Both): 50/50 split (5 men, 5 women).');
 
   // Check profile fields
   const sampleProfile = aliceState.profiles[0];
@@ -165,20 +181,29 @@ async function runRoundGameplayTest() {
   assert(!cMatchesErr, 'Failed to fetch Charlie matches: ' + cMatchesErr?.message);
   assert(charlieMatches.length === 3, `Charlie should have 3 secret matches, got ${charlieMatches.length}`);
 
-  // Verify Alice (looking for Man) only got Men as secret matches
-  const profileMap = new Map(aliceState.profiles.map(p => [p.id, p]));
+  // Verify Alice (looking for Man) only got Men as secret matches from her deck
+  const aliceProfileMap = new Map(aliceState.profiles.map(p => [p.id, p]));
   for (const m of aliceMatches) {
-    const p = profileMap.get(m.profile_id);
+    const p = aliceProfileMap.get(m.profile_id);
     assert(p && p.gender === 'man', `Alice (Looking for Man) matched with non-man: ${p?.name} (${p?.gender})`);
   }
   console.log('   ✓ Alice (Looking for Man): 100% of secret matches are Men!');
 
-  // Verify Bob (looking for Woman) only got Women as secret matches
+  // Verify Bob (looking for Woman) only got Women as secret matches from his deck
+  const bobProfileMap = new Map(bobState.profiles.map(p => [p.id, p]));
   for (const m of bobMatches) {
-    const p = profileMap.get(m.profile_id);
+    const p = bobProfileMap.get(m.profile_id);
     assert(p && p.gender === 'woman', `Bob (Looking for Woman) matched with non-woman: ${p?.name} (${p?.gender})`);
   }
   console.log('   ✓ Bob (Looking for Woman): 100% of secret matches are Women!');
+
+  // Verify Charlie (looking for Both) secret matches are from their deck
+  const charlieProfileMap = new Map(charlieState.profiles.map(p => [p.id, p]));
+  for (const m of charlieMatches) {
+    const p = charlieProfileMap.get(m.profile_id);
+    assert(p, `Charlie secret match must be in Charlie's deck: ${m.profile_id}`);
+  }
+  console.log('   ✓ Charlie (Looking for Both): 100% of secret matches from deck!');
 
   const aliceMatchIdSet = new Set(aliceMatches.map(m => m.profile_id));
   const nonMatchForAlice = aliceState.profiles.find(p => !aliceMatchIdSet.has(p.id));
@@ -262,9 +287,9 @@ async function runRoundGameplayTest() {
   // 13. Charlie (who selected both Man and Woman) likes 3 profiles -> triggers room auto-advance!
   console.log('\n13. Charlie (selected both Man & Woman) likes 3 profiles (all players now completed)...');
   const charlieMatchIdSet = new Set(charlieMatches.map(m => m.profile_id));
-  const charlieMatch1 = aliceState.profiles.find(p => charlieMatchIdSet.has(p.id));
-  const charlieNonMatch = aliceState.profiles.find(p => !charlieMatchIdSet.has(p.id));
-  const charlieMatch2 = aliceState.profiles.find(p => charlieMatchIdSet.has(p.id) && p.id !== charlieMatch1.id);
+  const charlieMatch1 = charlieState.profiles.find(p => charlieMatchIdSet.has(p.id));
+  const charlieNonMatch = charlieState.profiles.find(p => !charlieMatchIdSet.has(p.id));
+  const charlieMatch2 = charlieState.profiles.find(p => charlieMatchIdSet.has(p.id) && p.id !== charlieMatch1.id);
 
   await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieMatch1.id });
   await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieNonMatch.id });
@@ -283,12 +308,25 @@ async function runRoundGameplayTest() {
   const { data: aliceR2State } = await aliceClient.rpc('fetch_game_round_state', { p_room_id: roomId });
   assert(aliceR2State.room.current_round === 2, 'Alice state: round should be 2');
   assert(aliceR2State.profiles.length === 10, 'Round 2 has 10 profiles');
+  assert(aliceR2State.profiles.every(p => p.gender === 'man'), 'Alice Round 2 must still be 100% Men');
   assert(aliceR2State.my_likes.length === 0, 'Alice likes reset for Round 2');
 
   const { data: bobR2State } = await bobClient.rpc('fetch_game_round_state', { p_room_id: roomId });
   assert(bobR2State.room.current_round === 2, 'Bob state: round should be 2');
   assert(bobR2State.profiles.length === 10, 'Round 2 has 10 profiles');
+  assert(bobR2State.profiles.every(p => p.gender === 'woman'), 'Bob Round 2 must still be 100% Women');
   assert(bobR2State.my_likes.length === 0, 'Bob likes reset for Round 2');
+
+  // Verify unseen personas across rounds
+  const aliceR1Ids = new Set(aliceState.profiles.map(p => p.id));
+  const aliceOverlap = aliceR2State.profiles.filter(p => aliceR1Ids.has(p.id));
+  assert(aliceOverlap.length === 0, 'Alice Round 2 must show 100% unseen personas!');
+  console.log('   ✓ Alice Round 2: 10 new unseen Men (0 overlap with Round 1).');
+
+  const bobR1Ids = new Set(bobState.profiles.map(p => p.id));
+  const bobOverlap = bobR2State.profiles.filter(p => bobR1Ids.has(p.id));
+  assert(bobOverlap.length === 0, 'Bob Round 2 must show 100% unseen personas!');
+  console.log('   ✓ Bob Round 2: 10 new unseen Women (0 overlap with Round 1).');
 
   // Check Round 2 secret matches (RLS ensures each player only sees their own 3 secret matches)
   const { data: aliceR2Matches } = await aliceClient
