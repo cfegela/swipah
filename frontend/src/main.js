@@ -1097,6 +1097,16 @@ async function handleConfirmZeroMatches() {
   }
 }
 
+function formatTestOutcome(profile) {
+  if (!profile.is_match) return 'N/A';
+  const outcome = profile.date_outcome;
+  if (outcome === 'great') return 'Great (+1000 pts)';
+  if (outcome === 'good') return 'Good (+500 pts)';
+  if (outcome === 'bad') return 'Bad (-500 pts)';
+  if (outcome === 'murdered') return 'Murdered (💀 0 pts)';
+  return outcome ? outcome.toUpperCase() : 'N/A';
+}
+
 // Render Currently Viewed Profile
 function renderCurrentProfile() {
   if (!profileCardWrapper) return;
@@ -1213,6 +1223,21 @@ function renderCurrentProfile() {
         `
             : ''
         }
+        <div class="profile-test-debug-box">
+          <div class="test-debug-header">🧪 Testing Info</div>
+          <div class="test-debug-row">
+            <span class="test-debug-label">Match:</span>
+            <span class="test-debug-value ${profile.is_match ? 'test-val-match' : 'test-val-nomatch'}">
+              ${profile.is_match ? 'YES' : 'NO'}
+            </span>
+          </div>
+          <div class="test-debug-row">
+            <span class="test-debug-label">Date Outcome:</span>
+            <span class="test-debug-value test-outcome-${profile.date_outcome || 'none'}">
+              ${formatTestOutcome(profile)}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   `;
