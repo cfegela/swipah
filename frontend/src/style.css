@@ -1420,10 +1420,11 @@ input[type="text"]:focus {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
 .date-picker-btn {
+  margin-top: 0.45rem;
   background: var(--swipah-gradient);
   color: #fff;
   border: none;

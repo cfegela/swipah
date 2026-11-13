@@ -330,10 +330,10 @@ async function runRoundGameplayTest() {
   assert(aliceDateRes.round_advanced === false, 'Round should not advance yet (Bob and Charlie still reading)');
   console.log(`   ✓ Alice date resolved! New Score: ${aliceDateRes.new_score} pts (Murdered: ${aliceDateRes.is_murdered})`);
 
-  // 16. Bob resolves his date
+  // 16. Bob resolves his date (prefers a surviving outcome to verify Round 2 deck)
   console.log('\n16. Bob goes on date and reads recap...');
   const { data: bobDatingState } = await bobClient.rpc('fetch_game_round_state', { p_room_id: roomId });
-  const bobChosenMatch = bobDatingState.my_matches[0];
+  const bobChosenMatch = bobDatingState.my_matches.find(m => m.date_outcome !== 'murdered') || bobDatingState.my_matches[0];
   const { data: bobDateRes, error: bobDateErr } = await bobClient.rpc('resolve_player_date', {
     p_room_id: roomId,
     p_profile_id: bobChosenMatch.profile_id,
