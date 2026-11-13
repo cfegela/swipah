@@ -927,7 +927,8 @@ input[type="text"]:focus {
   word-break: break-word;
 }
 
-.profile-bio {
+.profile-bio,
+.profile-prompt-answer {
   font-size: 0.92rem;
   line-height: 1.5;
   color: #f1f5f9;
@@ -956,33 +957,6 @@ input[type="text"]:focus {
 
 .flags-bullet-green li::marker {
   color: #22c55e;
-}
-
-/* Prompt Card */
-.prompt-card {
-  background: rgba(0, 0, 34, 0.6);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--swipah-flame);
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.prompt-question {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--swipah-flame);
-}
-
-.prompt-answer {
-  font-size: 0.92rem;
-  line-height: 1.45;
-  color: #ffffff;
-  font-weight: 500;
 }
 
 /* Action Controls Bar */

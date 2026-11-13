@@ -829,9 +829,13 @@ function renderCurrentProfile() {
         ${
           profile.prompt_question
             ? `
-          <div class="prompt-card">
-            <div class="prompt-question">${escapeHtml(profile.prompt_question)}</div>
-            <div class="prompt-answer">${escapeHtml(profile.prompt_answer)}</div>
+          <div class="profile-field-section">
+            <div class="profile-field-label">${escapeHtml(
+              profile.prompt_question.endsWith(':')
+                ? profile.prompt_question
+                : `${profile.prompt_question}:`
+            )}</div>
+            <div class="profile-prompt-answer">${escapeHtml(profile.prompt_answer)}</div>
           </div>
         `
             : ''
