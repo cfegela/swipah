@@ -242,6 +242,10 @@
               <span class="hud-label">Matches</span>
               <span class="hud-value hud-matches-value" id="hud-matches-count">0 🔥</span>
             </div>
+            <div class="hud-stat-box" id="hud-score-box">
+              <span class="hud-label">Score</span>
+              <span class="hud-value hud-score-value" id="hud-score-count">0 pts</span>
+            </div>
           </div>
         </div>
         <button id="btn-leave-active-game" class="hidden" style="display: none;"></button>
@@ -288,6 +292,125 @@
           <!-- Host End Game Action (Below Profile Number Badge) -->
           <div class="game-bottom-actions">
             <button id="btn-end-active-game" class="btn btn-danger btn-sm" style="display: none;">
+              End Game
+            </button>
+          </div>
+        </div>
+
+        <!-- Dating Phase Section (Shown when round_phase === 'dating') -->
+        <div id="dating-phase-section" class="dating-phase-section hidden">
+          <!-- 1. Date Picker Card (when player has >1 match and hasn't chosen yet) -->
+          <div id="date-picker-card" class="card dating-card hidden">
+            <div class="dating-phase-header">
+              <div class="dating-badge-pill">🔥 IT'S A MATCH!</div>
+              <h2 class="dating-heading">Choose Your Date</h2>
+              <p class="dating-subheading">
+                You matched with <strong id="date-picker-match-count" style="color: var(--accent);">2 profiles</strong>! Choose who you want to go on a date with this round:
+              </p>
+            </div>
+            <div id="date-picker-grid" class="date-picker-grid">
+              <!-- Dynamically populated match cards -->
+            </div>
+          </div>
+
+          <!-- 2. Date Story Recap Card (when going on date) -->
+          <div id="date-story-card" class="card dating-card hidden">
+            <div class="date-story-header">
+              <div id="date-outcome-badge" class="date-outcome-badge date-badge-great">
+                🌟 INCREDIBLE DATE (+1000 PTS)
+              </div>
+              <div class="date-partner-hero">
+                <div id="date-partner-avatar" class="date-partner-avatar"></div>
+                <div class="date-partner-info">
+                  <h2 id="date-partner-name" class="date-partner-name">Match Name</h2>
+                  <div id="date-partner-sub" class="date-partner-sub">Age • Occupation • Location</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Read Aloud Social Prompt Banner -->
+            <div class="date-read-aloud-banner">
+              <span class="read-icon">📢</span>
+              <div class="read-text">
+                <strong>Read Aloud!</strong> Read your date recap to the group.
+              </div>
+            </div>
+
+            <!-- Story Narrative Paragraphs -->
+            <div id="date-story-content" class="date-story-box">
+              <!-- Populated by dateStories.js -->
+            </div>
+
+            <!-- Score Delta Pill -->
+            <div class="date-score-delta-box" id="date-score-delta-box">
+              <span class="score-delta-label">Round Score:</span>
+              <span class="score-delta-val" id="date-score-delta-val">+1,000 pts</span>
+            </div>
+
+            <!-- Action Button -->
+            <div class="dating-actions">
+              <button id="btn-confirm-date-read" class="btn btn-primary date-btn-action">
+                I Read My Date to the Group ➔
+              </button>
+            </div>
+
+            <!-- Ready Status Checklist -->
+            <div id="dating-players-status-box" class="dating-players-status-box hidden">
+              <div class="dating-status-title">Waiting for everyone to finish reading...</div>
+              <div id="dating-players-list" class="dating-players-list"></div>
+            </div>
+          </div>
+
+          <!-- 3. Zero Matches Conciliatory Card -->
+          <div id="date-zero-matches-card" class="card dating-card hidden">
+            <div class="zero-matches-hero">
+              <div class="zero-matches-icon" id="zero-matches-icon">🍕 📺 🧦</div>
+              <h2 class="zero-matches-headline" id="zero-matches-headline">Netflix & Microwave Pizza For One</h2>
+            </div>
+            <div class="date-story-box" id="zero-matches-body">
+              <p>Oof. Tough night on Swipah! You used all 3 of your likes, but not a single profile swiped right back on you.</p>
+            </div>
+            <div class="zero-matches-advice" id="zero-matches-advice">
+              💡 Pro-tip: Lower your standards or hire a professional bio ghostwriter for next round.
+            </div>
+
+            <div class="dating-actions">
+              <button id="btn-confirm-zero-matches" class="btn btn-primary date-btn-action">
+                Ready for Next Round ➔
+              </button>
+            </div>
+
+            <div id="zero-matches-players-status-box" class="dating-players-status-box hidden">
+              <div class="dating-status-title">Waiting for players on dates to finish reading...</div>
+              <div id="zero-matches-players-list" class="dating-players-list"></div>
+            </div>
+          </div>
+
+          <!-- 4. Murdered Spectator Card -->
+          <div id="date-spectator-card" class="card dating-card hidden">
+            <div class="zero-matches-hero">
+              <div class="zero-matches-icon">💀 👻 🪦</div>
+              <h2 class="zero-matches-headline" style="color: #ef4444;">You Are Dead (Spectator Mode)</h2>
+            </div>
+            <div class="date-story-box">
+              <p>You were tragically murdered on a previous date! You have been eliminated from the game and cannot swipe or match.</p>
+              <p>Enjoy floating around as a ghost spectator while the living players risk it all in the dating pool!</p>
+            </div>
+            <div class="dating-actions">
+              <button id="btn-confirm-spectator-ready" class="btn btn-secondary date-btn-action">
+                Ready for Next Round ➔
+              </button>
+            </div>
+
+            <div id="spectator-players-status-box" class="dating-players-status-box hidden">
+              <div class="dating-status-title">Waiting for living players...</div>
+              <div id="spectator-players-list" class="dating-players-list"></div>
+            </div>
+          </div>
+
+          <!-- Host End Game Action for Dating Phase -->
+          <div class="dating-bottom-actions">
+            <button id="btn-end-active-game-dating" class="btn btn-danger btn-sm" style="display: none;">
               End Game
             </button>
           </div>

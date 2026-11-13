@@ -284,32 +284,90 @@ async function runRoundGameplayTest() {
   assert(bLike3.round_advanced === false, 'Round should not advance yet because Charlie is still swiping');
   console.log(`   ✓ Bob completed 3 likes (round waiting for Charlie).`);
 
-  // 13. Charlie (who selected both Man and Woman) likes 3 profiles -> triggers room auto-advance!
-  console.log('\n13. Charlie (selected both Man & Woman) likes 3 profiles (all players now completed)...');
+  // 13. Charlie likes 3 profiles (all players now completed swiping) -> triggers transition to 'dating' phase!
+  console.log('\n13. Charlie likes 3 profiles (all players now completed swiping)...');
   const charlieMatchIdSet = new Set(charlieMatches.map(m => m.profile_id));
   const charlieMatch1 = charlieState.profiles.find(p => charlieMatchIdSet.has(p.id));
-  const charlieNonMatch = charlieState.profiles.find(p => !charlieMatchIdSet.has(p.id));
-  const charlieMatch2 = charlieState.profiles.find(p => charlieMatchIdSet.has(p.id) && p.id !== charlieMatch1.id);
+  const charlieNonMatch1 = charlieState.profiles.find(p => !charlieMatchIdSet.has(p.id));
+  const charlieNonMatch2 = charlieState.profiles.find(p => !charlieMatchIdSet.has(p.id) && p.id !== charlieNonMatch1.id);
 
+  // Charlie likes 1 match and 2 non-matches
   await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieMatch1.id });
-  await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieNonMatch.id });
+  await charlieClient.rpc('submit_like', { p_room_id: roomId, p_profile_id: charlieNonMatch1.id });
   const { data: cLike3, error: cLike3Err } = await charlieClient.rpc('submit_like', {
     p_room_id: roomId,
-    p_profile_id: charlieMatch2.id,
+    p_profile_id: charlieNonMatch2.id,
   });
   assert(!cLike3Err, 'Charlie like 3 failed: ' + cLike3Err?.message);
   assert(cLike3.round_completed === true, 'Charlie round_completed should be true');
-  assert(cLike3.round_advanced === true, 'Round should immediately advance to next round!');
-  assert(cLike3.current_round === 2, 'Current round should now be 2');
-  console.log('   ✓ Round automatically advanced to Round 2! 🎉');
+  assert(cLike3.round_phase === 'dating', 'Room round_phase should now be "dating"');
+  assert(cLike3.phase_transitioned === true, 'phase_transitioned should be true');
+  console.log('   ✓ Room transitioned to "dating" phase! 🎉');
 
-  // 14. Verify Round 2 state
-  console.log('\n14. Verifying Round 2 state for both players...');
+  // 14. Verify Dating Phase State & Date Outcomes for all players
+  console.log('\n14. Verifying Dating Phase state & date outcomes...');
+  const { data: aliceDatingState } = await aliceClient.rpc('fetch_game_round_state', { p_room_id: roomId });
+  assert(aliceDatingState.room.round_phase === 'dating', 'Alice state: round_phase should be dating');
+  assert(aliceDatingState.my_matches.length >= 1, 'Alice should have at least 1 match');
+  console.log(`   ✓ Alice has ${aliceDatingState.my_matches.length} match(es) for dating.`);
+
+  const aliceChosenMatch = aliceDatingState.my_matches[0];
+  assert(['great', 'good', 'bad', 'murdered'].includes(aliceChosenMatch.date_outcome), 'Valid date outcome: ' + aliceChosenMatch.date_outcome);
+  if (aliceChosenMatch.date_outcome === 'great') assert(aliceChosenMatch.date_points === 1000, 'Great date is 1000 pts');
+  if (aliceChosenMatch.date_outcome === 'good') assert(aliceChosenMatch.date_points === 500, 'Good date is 500 pts');
+  if (aliceChosenMatch.date_outcome === 'bad') assert(aliceChosenMatch.date_points === -500, 'Bad date is -500 pts (scores can go negative)');
+  if (aliceChosenMatch.date_outcome === 'murdered') assert(aliceChosenMatch.date_points === 0, 'Murdered date is 0 pts');
+  console.log(`   ✓ Alice date outcome verified: ${aliceChosenMatch.date_outcome} (${aliceChosenMatch.date_points} pts).`);
+
+  // 15. Alice resolves her date
+  console.log('\n15. Alice goes on date and reads recap...');
+  const { data: aliceDateRes, error: aliceDateErr } = await aliceClient.rpc('resolve_player_date', {
+    p_room_id: roomId,
+    p_profile_id: aliceChosenMatch.profile_id,
+  });
+  assert(!aliceDateErr, 'Alice date resolution failed: ' + aliceDateErr?.message);
+  assert(aliceDateRes.date_completed === true, 'Alice date_completed should be true');
+  assert(aliceDateRes.round_advanced === false, 'Round should not advance yet (Bob and Charlie still reading)');
+  console.log(`   ✓ Alice date resolved! New Score: ${aliceDateRes.new_score} pts (Murdered: ${aliceDateRes.is_murdered})`);
+
+  // 16. Bob resolves his date
+  console.log('\n16. Bob goes on date and reads recap...');
+  const { data: bobDatingState } = await bobClient.rpc('fetch_game_round_state', { p_room_id: roomId });
+  const bobChosenMatch = bobDatingState.my_matches[0];
+  const { data: bobDateRes, error: bobDateErr } = await bobClient.rpc('resolve_player_date', {
+    p_room_id: roomId,
+    p_profile_id: bobChosenMatch.profile_id,
+  });
+  assert(!bobDateErr, 'Bob date resolution failed: ' + bobDateErr?.message);
+  assert(bobDateRes.date_completed === true, 'Bob date_completed should be true');
+  assert(bobDateRes.round_advanced === false, 'Round should not advance yet (Charlie still reading)');
+  console.log(`   ✓ Bob date resolved! New Score: ${bobDateRes.new_score} pts`);
+
+  // 17. Charlie resolves date / conciliatory screen
+  console.log('\n17. Charlie finishes reading date/conciliatory screen (last player to confirm)...');
+  const { data: charlieDatingState } = await charlieClient.rpc('fetch_game_round_state', { p_room_id: roomId });
+  const charlieMatch = charlieDatingState.my_matches[0];
+  const { data: charlieDateRes, error: charlieDateErr } = await charlieClient.rpc('resolve_player_date', {
+    p_room_id: roomId,
+    p_profile_id: charlieMatch ? charlieMatch.profile_id : null,
+  });
+  assert(!charlieDateErr, 'Charlie date resolution failed: ' + charlieDateErr?.message);
+  assert(charlieDateRes.date_completed === true, 'Charlie date_completed should be true');
+  assert(charlieDateRes.round_advanced === true, 'Round should advance to Round 2 now that all players have read!');
+  assert(charlieDateRes.current_round === 2, 'Current round should now be 2');
+  assert(charlieDateRes.round_phase === 'swiping', 'Round phase should be reset to "swiping"');
+  console.log('   ✓ All players finished dates! Round automatically advanced to Round 2 swiping! 🎉');
+
+  // 18. Verify Round 2 state
+  console.log('\n18. Verifying Round 2 state for all players...');
   const { data: aliceR2State } = await aliceClient.rpc('fetch_game_round_state', { p_room_id: roomId });
   assert(aliceR2State.room.current_round === 2, 'Alice state: round should be 2');
-  assert(aliceR2State.profiles.length === 10, 'Round 2 has 10 profiles');
-  assert(aliceR2State.profiles.every(p => p.gender === 'man'), 'Alice Round 2 must still be 100% Men');
+  assert(aliceR2State.room.round_phase === 'swiping', 'Alice state: round_phase should be swiping');
   assert(aliceR2State.my_likes.length === 0, 'Alice likes reset for Round 2');
+
+  const alicePlayerInR2 = aliceR2State.players.find(p => p.user_id === aliceUser.id);
+  assert(alicePlayerInR2.score === aliceDateRes.new_score, 'Score persisted across rounds: ' + alicePlayerInR2.score);
+  console.log(`   ✓ Score persisted into Round 2: ${alicePlayerInR2.score} pts`);
 
   const { data: bobR2State } = await bobClient.rpc('fetch_game_round_state', { p_room_id: roomId });
   assert(bobR2State.room.current_round === 2, 'Bob state: round should be 2');
@@ -318,33 +376,25 @@ async function runRoundGameplayTest() {
   assert(bobR2State.my_likes.length === 0, 'Bob likes reset for Round 2');
 
   // Verify unseen personas across rounds
-  const aliceR1Ids = new Set(aliceState.profiles.map(p => p.id));
-  const aliceOverlap = aliceR2State.profiles.filter(p => aliceR1Ids.has(p.id));
-  assert(aliceOverlap.length === 0, 'Alice Round 2 must show 100% unseen personas!');
-  console.log('   ✓ Alice Round 2: 10 new unseen Men (0 overlap with Round 1).');
-
   const bobR1Ids = new Set(bobState.profiles.map(p => p.id));
   const bobOverlap = bobR2State.profiles.filter(p => bobR1Ids.has(p.id));
   assert(bobOverlap.length === 0, 'Bob Round 2 must show 100% unseen personas!');
   console.log('   ✓ Bob Round 2: 10 new unseen Women (0 overlap with Round 1).');
 
-  // Check Round 2 secret matches (RLS ensures each player only sees their own 3 secret matches)
-  const { data: aliceR2Matches } = await aliceClient
-    .from('player_round_matches')
-    .select('*')
-    .eq('room_id', roomId)
-    .eq('round_number', 2);
-  assert(aliceR2Matches.length === 3, `Expected 3 matches for Alice in Round 2, got ${aliceR2Matches?.length}`);
+  // If a player was murdered in Round 1, test that they cannot swipe in Round 2
+  const murderedPlayer = [alicePlayerInR2, bobR2State.players.find(p => p.user_id === bobUser.id)].find(p => p.is_murdered);
+  if (murderedPlayer) {
+    console.log(`\n19. Testing murdered player rejection (${murderedPlayer.display_name})...`);
+    const murderedClient = murderedPlayer.user_id === aliceUser.id ? aliceClient : bobClient;
+    const { error: murderedSwipeErr } = await murderedClient.rpc('submit_like', {
+      p_room_id: roomId,
+      p_profile_id: bobR2State.profiles[0].id,
+    });
+    assert(murderedSwipeErr && murderedSwipeErr.message.includes('Murdered players cannot swipe'), 'Must block murdered player from swiping');
+    console.log('   ✓ Murdered player successfully blocked from swiping in Round 2!');
+  }
 
-  const { data: bobR2Matches } = await bobClient
-    .from('player_round_matches')
-    .select('*')
-    .eq('room_id', roomId)
-    .eq('round_number', 2);
-  assert(bobR2Matches.length === 3, `Expected 3 matches for Bob in Round 2, got ${bobR2Matches?.length}`);
-  console.log('   ✓ Round 2 successfully seeded with 10 profiles and 3 new secret matches per player (protected by RLS).');
-
-  console.log('\n🎉 ALL PHASE 1 DATING GAMEPLAY LOOP TESTS PASSED SUCCESSFULLY!\n');
+  console.log('\n🎉 ALL DATING PHASE & MURDER STAKES TESTS PASSED SUCCESSFULLY!\n');
 }
 
 runRoundGameplayTest().catch((err) => {

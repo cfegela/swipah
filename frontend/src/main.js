@@ -1,5 +1,6 @@
 import './style.css';
 import QRCode from 'qrcode';
+import { getDateStory, getConciliatoryMessage } from './dateStories.js';
 import {
   ensureAnonymousSession,
   createRoom,
@@ -10,6 +11,7 @@ import {
   startGame,
   fetchGameRoundState,
   submitLike,
+  resolvePlayerDate,
 } from './supabase.js';
 
 // Application State
@@ -19,6 +21,9 @@ let currentPlayers = [];
 let currentRoundProfiles = [];
 let currentProfileIdx = 0;
 let myLikes = [];
+let myMatches = [];
+let chosenDateProfileId = null;
+let isResolvingDate = false;
 let lastSeenRound = 0;
 let isSubmittingLike = false;
 
@@ -232,6 +237,8 @@ const btnStartGame = document.getElementById('btn-start-game');
 const hudRoundNumber = document.getElementById('hud-round-number');
 const hudLikesRemaining = document.getElementById('hud-likes-remaining');
 const hudMatchesCount = document.getElementById('hud-matches-count');
+const hudScoreBox = document.getElementById('hud-score-box');
+const hudScoreCount = document.getElementById('hud-score-count');
 const btnEndActiveGame = document.getElementById('btn-end-active-game');
 const btnLeaveActiveGame = document.getElementById('btn-leave-active-game');
 
@@ -245,6 +252,38 @@ const btnLikeProfile = document.getElementById('btn-like-profile');
 const btnNextProfile = document.getElementById('btn-next-profile');
 const currentProfileNum = document.getElementById('current-profile-num');
 const totalProfilesNum = document.getElementById('total-profiles-num');
+
+// DOM Elements: Dating Phase Section
+const datingPhaseSection = document.getElementById('dating-phase-section');
+const datePickerCard = document.getElementById('date-picker-card');
+const datePickerGrid = document.getElementById('date-picker-grid');
+const datePickerMatchCount = document.getElementById('date-picker-match-count');
+
+const dateStoryCard = document.getElementById('date-story-card');
+const dateOutcomeBadge = document.getElementById('date-outcome-badge');
+const datePartnerAvatar = document.getElementById('date-partner-avatar');
+const datePartnerName = document.getElementById('date-partner-name');
+const datePartnerSub = document.getElementById('date-partner-sub');
+const dateStoryContent = document.getElementById('date-story-content');
+const dateScoreDeltaVal = document.getElementById('date-score-delta-val');
+const btnConfirmDateRead = document.getElementById('btn-confirm-date-read');
+const datingPlayersStatusBox = document.getElementById('dating-players-status-box');
+const datingPlayersList = document.getElementById('dating-players-list');
+
+const dateZeroMatchesCard = document.getElementById('date-zero-matches-card');
+const zeroMatchesIcon = document.getElementById('zero-matches-icon');
+const zeroMatchesHeadline = document.getElementById('zero-matches-headline');
+const zeroMatchesBody = document.getElementById('zero-matches-body');
+const zeroMatchesAdvice = document.getElementById('zero-matches-advice');
+const btnConfirmZeroMatches = document.getElementById('btn-confirm-zero-matches');
+const zeroMatchesPlayersStatusBox = document.getElementById('zero-matches-players-status-box');
+const zeroMatchesPlayersList = document.getElementById('zero-matches-players-list');
+
+const dateSpectatorCard = document.getElementById('date-spectator-card');
+const btnConfirmSpectatorReady = document.getElementById('btn-confirm-spectator-ready');
+const spectatorPlayersStatusBox = document.getElementById('spectator-players-status-box');
+const spectatorPlayersList = document.getElementById('spectator-players-list');
+const btnEndActiveGameDating = document.getElementById('btn-end-active-game-dating');
 
 // Alerts
 function showAlert(message, type = 'error') {
@@ -388,6 +427,10 @@ function openMatchModal(profile) {
 
 function closeMatchModal() {
   matchModal.classList.add('hidden');
+  if (currentRoom?.round_phase === 'dating') {
+    loadAndShowGameView();
+    return;
+  }
   if (myLikes.length >= 3) {
     showWaitingOverlay();
   } else {
@@ -493,23 +536,36 @@ function startGamePolling(roomId) {
         currentPlayers = state.players || currentPlayers;
         currentRoundProfiles = state.profiles || [];
         myLikes = state.my_likes || [];
+        myMatches = state.my_matches || [];
         lastSeenRound = state.room.current_round;
         currentProfileIdx = 0;
+        chosenDateProfileId = null;
 
         updateHUD();
-        profileSwipeSection.classList.remove('hidden');
-        waitingRoundOverlay.classList.add('hidden');
-        renderCurrentProfile();
-        openRoundStartModal(currentRoom.current_round);
-        playChime();
+        await loadAndShowGameView();
         return;
       }
 
-      // Update player states in waiting overlay
+      // Check if phase transitioned
+      if (state.room.round_phase !== currentRoom.round_phase) {
+        currentRoom = state.room;
+        currentPlayers = state.players || currentPlayers;
+        currentRoundProfiles = state.profiles || [];
+        myLikes = state.my_likes || [];
+        myMatches = state.my_matches || [];
+        updateHUD();
+        await loadAndShowGameView();
+        return;
+      }
+
+      // Update player states in waiting overlay or dating phase
       if (state.players) {
         currentPlayers = state.players;
+        myMatches = state.my_matches || myMatches;
         updateHUD();
-        if (myLikes.length >= 3) {
+        if (currentRoom.round_phase === 'dating') {
+          renderDatingPhase();
+        } else if (myLikes.length >= 3) {
           renderWaitingPlayersList();
         }
       }
@@ -539,8 +595,14 @@ function setupRealtimeSubscription(roomId) {
           const state = await fetchGameRoundState(roomId);
           if (state && state.players) {
             currentPlayers = state.players;
+            myMatches = state.my_matches || myMatches;
             updateHUD();
-            if (myLikes.length >= 3) {
+            if (state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
+              currentRoom = state.room;
+              loadAndShowGameView();
+            } else if (currentRoom.round_phase === 'dating') {
+              renderDatingPhase();
+            } else if (myLikes.length >= 3) {
               renderWaitingPlayersList();
             }
           }
@@ -565,7 +627,7 @@ function setupRealtimeSubscription(roomId) {
       if (!updatedRoom) return;
 
       if (updatedRoom.status === 'in_progress') {
-        if (!currentRoom || currentRoom.status !== 'in_progress' || updatedRoom.current_round > (currentRoom.current_round || 0)) {
+        if (!currentRoom || currentRoom.status !== 'in_progress' || updatedRoom.current_round > (currentRoom.current_round || 0) || updatedRoom.round_phase !== currentRoom.round_phase) {
           currentRoom = updatedRoom;
           playChime();
           loadAndShowGameView();
@@ -583,10 +645,13 @@ function setupRealtimeSubscription(roomId) {
           const state = await fetchGameRoundState(roomId);
           if (state) {
             currentPlayers = state.players || currentPlayers;
+            myMatches = state.my_matches || myMatches;
             updateHUD();
-            if (state.room.current_round > currentRoom.current_round) {
+            if (state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
               currentRoom = state.room;
               loadAndShowGameView();
+            } else if (currentRoom.round_phase === 'dating') {
+              renderDatingPhase();
             } else if (myLikes.length >= 3) {
               renderWaitingPlayersList();
             }
@@ -688,6 +753,9 @@ function showLandingView() {
   currentRoundProfiles = [];
   currentProfileIdx = 0;
   myLikes = [];
+  myMatches = [];
+  chosenDateProfileId = null;
+  isResolvingDate = false;
   lastSeenRound = 0;
 
   setRoomUrl(null);
@@ -699,6 +767,7 @@ function showLandingView() {
   closePhotoLightbox();
 
   btnEndActiveGame.style.display = 'none';
+  if (btnEndActiveGameDating) btnEndActiveGameDating.style.display = 'none';
   btnLeaveActiveGame.style.display = 'none';
 
   document.getElementById('app').classList.remove('in-lobby', 'in-game');
@@ -723,9 +792,23 @@ function updateHUD() {
   if (hudMatchesCount) {
     hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} 🔥`;
   }
+  if (hudScoreCount) {
+    if (myPlayer?.is_murdered) {
+      hudScoreCount.textContent = '💀 Murdered';
+      hudScoreCount.className = 'hud-value hud-score-value score-murdered';
+    } else {
+      const score = myPlayer?.score ?? 0;
+      hudScoreCount.textContent = `${score} pts`;
+      hudScoreCount.className = `hud-value hud-score-value ${score < 0 ? 'score-negative' : ''}`;
+    }
+  }
   // Only host sees the End Game button
+  const isHost = !!myPlayer?.is_host;
   if (btnEndActiveGame) {
-    btnEndActiveGame.style.display = myPlayer?.is_host ? 'inline-flex' : 'none';
+    btnEndActiveGame.style.display = isHost ? 'inline-flex' : 'none';
+  }
+  if (btnEndActiveGameDating) {
+    btnEndActiveGameDating.style.display = isHost ? 'inline-flex' : 'none';
   }
 }
 
@@ -768,6 +851,291 @@ function renderWaitingPlayersList() {
       `;
     })
     .join('');
+}
+
+// Render Dating Phase Checklist
+function renderDatingChecklist(containerEl) {
+  if (!containerEl) return;
+  containerEl.innerHTML = currentPlayers
+    .map((p) => {
+      const isMe = p.user_id === currentUser?.id;
+
+      if (p.is_murdered) {
+        return `
+          <div class="dating-player-row murdered">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span style="font-size: 1.15rem;">💀</span>
+              <div>
+                <strong style="color: #ef4444;">${escapeHtml(p.display_name)} ${isMe ? '(You)' : ''}</strong>
+                <div style="font-size: 0.78rem; color: #fca5a5;">Murdered • Spectator</div>
+              </div>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #fca5a5;">Ghost</span>
+          </div>
+        `;
+      }
+
+      if (p.date_completed) {
+        return `
+          <div class="dating-player-row ready">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span style="font-size: 1.15rem;">✓</span>
+              <div>
+                <strong style="color: #fff;">${escapeHtml(p.display_name)} ${isMe ? '(You)' : ''}</strong>
+                <div style="font-size: 0.78rem; color: #86efac;">Score: ${p.score ?? 0} pts</div>
+              </div>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #22c55e;">Ready</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="dating-player-row reading">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="font-size: 1.15rem;">📖</span>
+            <div>
+              <strong style="color: #fff;">${escapeHtml(p.display_name)} ${isMe ? '(You)' : ''}</strong>
+              <div style="font-size: 0.78rem; color: #fcd34d;">Reading recap to group...</div>
+            </div>
+          </div>
+          <span style="font-size: 0.82rem; font-weight: 700; color: #f59e0b;">Reading...</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+// Render Dating Phase View
+function renderDatingPhase() {
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  if (!myPlayer) return;
+
+  // 1. Ghost / Murdered Spectator
+  if (myPlayer.is_murdered) {
+    datePickerCard.classList.add('hidden');
+    dateStoryCard.classList.add('hidden');
+    dateZeroMatchesCard.classList.add('hidden');
+    dateSpectatorCard.classList.remove('hidden');
+
+    spectatorPlayersStatusBox.classList.remove('hidden');
+    renderDatingChecklist(spectatorPlayersList);
+
+    if (myPlayer.date_completed) {
+      btnConfirmSpectatorReady.disabled = true;
+      btnConfirmSpectatorReady.textContent = '✓ Ready (Waiting for living players...)';
+    } else {
+      btnConfirmSpectatorReady.disabled = false;
+      btnConfirmSpectatorReady.textContent = 'Ready for Next Round ➔';
+    }
+    return;
+  }
+
+  // 2. Zero Matches Scenario
+  if (!myMatches || myMatches.length === 0) {
+    datePickerCard.classList.add('hidden');
+    dateStoryCard.classList.add('hidden');
+    dateSpectatorCard.classList.add('hidden');
+    dateZeroMatchesCard.classList.remove('hidden');
+
+    const msg = getConciliatoryMessage(currentRoom?.current_round || 1);
+    zeroMatchesIcon.textContent = msg.icon;
+    zeroMatchesHeadline.textContent = msg.headline;
+    zeroMatchesBody.innerHTML = `<p>${escapeHtml(msg.body)}</p>`;
+    zeroMatchesAdvice.textContent = `💡 ${msg.advice}`;
+
+    if (myPlayer.date_completed) {
+      btnConfirmZeroMatches.disabled = true;
+      btnConfirmZeroMatches.textContent = '✓ Ready (Waiting for dates to finish...)';
+      zeroMatchesPlayersStatusBox.classList.remove('hidden');
+      renderDatingChecklist(zeroMatchesPlayersList);
+    } else {
+      btnConfirmZeroMatches.disabled = false;
+      btnConfirmZeroMatches.textContent = 'Ready for Next Round ➔';
+      zeroMatchesPlayersStatusBox.classList.add('hidden');
+    }
+    return;
+  }
+
+  // 3. One or More Matches
+  if (myMatches.length === 1 && !chosenDateProfileId) {
+    chosenDateProfileId = myMatches[0].profile_id || myMatches[0].id;
+  }
+
+  const selectedMatch = myMatches.find(
+    (m) => (m.profile_id || m.id) === (chosenDateProfileId || myPlayer.selected_date_profile_id)
+  );
+
+  if (selectedMatch) {
+    chosenDateProfileId = selectedMatch.profile_id || selectedMatch.id;
+    datePickerCard.classList.add('hidden');
+    dateZeroMatchesCard.classList.add('hidden');
+    dateSpectatorCard.classList.add('hidden');
+    dateStoryCard.classList.remove('hidden');
+
+    const outcome = selectedMatch.date_outcome || 'good';
+    const story = getDateStory(selectedMatch, outcome);
+
+    dateOutcomeBadge.textContent = story.badgeText;
+    dateOutcomeBadge.className = `date-outcome-badge ${story.badgeClass}`;
+
+    const avatarHtml = selectedMatch.avatar_url
+      ? `<img src="${escapeHtml(selectedMatch.avatar_url)}" alt="${escapeHtml(selectedMatch.name)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />`
+      : (selectedMatch.avatar_svg || '');
+    datePartnerAvatar.innerHTML = avatarHtml;
+    datePartnerName.textContent = selectedMatch.name;
+    datePartnerSub.textContent = `${selectedMatch.age} • ${escapeHtml(selectedMatch.occupation || 'Mystery Job')} • ${escapeHtml(selectedMatch.location || 'Unknown')}`;
+
+    dateStoryContent.innerHTML = story.paragraphs
+      .map((p) => `<p>${escapeHtml(p)}</p>`)
+      .join('');
+
+    dateScoreDeltaVal.textContent = story.scoreDeltaText;
+
+    if (myPlayer.date_completed) {
+      btnConfirmDateRead.disabled = true;
+      btnConfirmDateRead.textContent = '✓ Finished Reading (Waiting for others...)';
+      datingPlayersStatusBox.classList.remove('hidden');
+      renderDatingChecklist(datingPlayersList);
+    } else {
+      btnConfirmDateRead.disabled = false;
+      btnConfirmDateRead.textContent = 'I Read My Date to the Group ➔';
+      datingPlayersStatusBox.classList.add('hidden');
+    }
+    return;
+  }
+
+  // 4. Multiple matches and hasn't chosen yet: Show Picker Grid
+  dateStoryCard.classList.add('hidden');
+  dateZeroMatchesCard.classList.add('hidden');
+  dateSpectatorCard.classList.add('hidden');
+  datePickerCard.classList.remove('hidden');
+
+  datePickerMatchCount.textContent = `${myMatches.length} profiles`;
+  datePickerGrid.innerHTML = myMatches
+    .map((match) => {
+      const matchId = match.profile_id || match.id;
+      const avatarHtml = match.avatar_url
+        ? `<img src="${escapeHtml(match.avatar_url)}" alt="${escapeHtml(match.name)}" />`
+        : (match.avatar_svg || '');
+
+      return `
+        <button type="button" class="date-picker-item" data-profile-id="${escapeHtml(matchId)}">
+          <div class="date-picker-avatar">${avatarHtml}</div>
+          <div class="date-picker-info">
+            <div class="date-picker-name">${escapeHtml(match.name)}, ${match.age}</div>
+            <div class="date-picker-sub">${escapeHtml(match.occupation || '')} • ${escapeHtml(match.location || '')}</div>
+            <span class="date-picker-btn">Go on Date 🔥</span>
+          </div>
+        </button>
+      `;
+    })
+    .join('');
+
+  const pickerButtons = datePickerGrid.querySelectorAll('.date-picker-item');
+  pickerButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const pId = btn.getAttribute('data-profile-id');
+      if (pId) {
+        chosenDateProfileId = pId;
+        renderDatingPhase();
+      }
+    });
+  });
+}
+
+// Dating Phase Action Handlers
+async function handleConfirmDateRead() {
+  if (isResolvingDate || !currentRoom) return;
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  if (!myPlayer || myPlayer.date_completed) return;
+
+  isResolvingDate = true;
+  btnConfirmDateRead.disabled = true;
+  btnConfirmDateRead.textContent = 'Submitting...';
+
+  try {
+    const res = await resolvePlayerDate(currentRoom.id, chosenDateProfileId);
+    if (res.new_score !== undefined) {
+      myPlayer.score = res.new_score;
+    }
+    if (res.is_murdered !== undefined) {
+      myPlayer.is_murdered = res.is_murdered;
+    }
+    myPlayer.date_completed = true;
+
+    updateHUD();
+
+    if (res.round_advanced) {
+      chosenDateProfileId = null;
+      await loadAndShowGameView();
+    } else {
+      renderDatingPhase();
+    }
+  } catch (err) {
+    showAlert(err.message || 'Failed to confirm date completion.');
+    btnConfirmDateRead.disabled = false;
+    btnConfirmDateRead.textContent = 'I Read My Date to the Group ➔';
+  } finally {
+    isResolvingDate = false;
+  }
+}
+
+async function handleConfirmZeroMatches() {
+  if (isResolvingDate || !currentRoom) return;
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  if (!myPlayer || myPlayer.date_completed) return;
+
+  isResolvingDate = true;
+  btnConfirmZeroMatches.disabled = true;
+  btnConfirmZeroMatches.textContent = 'Submitting...';
+
+  try {
+    const res = await resolvePlayerDate(currentRoom.id, null);
+    myPlayer.date_completed = true;
+    updateHUD();
+
+    if (res.round_advanced) {
+      chosenDateProfileId = null;
+      await loadAndShowGameView();
+    } else {
+      renderDatingPhase();
+    }
+  } catch (err) {
+    showAlert(err.message || 'Failed to confirm readiness.');
+    btnConfirmZeroMatches.disabled = false;
+    btnConfirmZeroMatches.textContent = 'Ready for Next Round ➔';
+  } finally {
+    isResolvingDate = false;
+  }
+}
+
+async function handleConfirmSpectatorReady() {
+  if (isResolvingDate || !currentRoom) return;
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  if (!myPlayer || myPlayer.date_completed) return;
+
+  isResolvingDate = true;
+  btnConfirmSpectatorReady.disabled = true;
+  btnConfirmSpectatorReady.textContent = 'Submitting...';
+
+  try {
+    const res = await resolvePlayerDate(currentRoom.id, null);
+    myPlayer.date_completed = true;
+
+    if (res.round_advanced) {
+      chosenDateProfileId = null;
+      await loadAndShowGameView();
+    } else {
+      renderDatingPhase();
+    }
+  } catch (err) {
+    showAlert(err.message || 'Failed to confirm spectator readiness.');
+    btnConfirmSpectatorReady.disabled = false;
+    btnConfirmSpectatorReady.textContent = 'Ready for Next Round ➔';
+  } finally {
+    isResolvingDate = false;
+  }
 }
 
 // Render Currently Viewed Profile
@@ -1063,7 +1431,11 @@ async function handleLikeProfile() {
       openMatchModal(profile);
     }
 
-    if (res.round_advanced) {
+    if (res.phase_transitioned || res.round_phase === 'dating') {
+      // Swiping completed for all players -> transition into dating phase!
+      currentRoom.round_phase = 'dating';
+      await loadAndShowGameView();
+    } else if (res.round_advanced) {
       // All players in room finished 3 likes -> immediately advance to next round!
       await loadAndShowGameView();
     } else if (res.round_completed) {
@@ -1109,12 +1481,16 @@ async function loadAndShowGameView() {
     currentPlayers = state.players || currentPlayers;
     currentRoundProfiles = state.profiles || [];
     myLikes = state.my_likes || [];
+    myMatches = state.my_matches || [];
 
     const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
     const isHost = !!myPlayer?.is_host;
 
     if (btnEndActiveGame) {
       btnEndActiveGame.style.display = isHost ? 'inline-flex' : 'none';
+    }
+    if (btnEndActiveGameDating) {
+      btnEndActiveGameDating.style.display = isHost ? 'inline-flex' : 'none';
     }
     if (btnLeaveActiveGame) {
       btnLeaveActiveGame.style.display = 'none';
@@ -1126,17 +1502,32 @@ async function loadAndShowGameView() {
     if (currentRoom.current_round !== lastSeenRound) {
       lastSeenRound = currentRoom.current_round;
       currentProfileIdx = 0;
-      openRoundStartModal(currentRoom.current_round);
+      chosenDateProfileId = null;
+      if (!myPlayer?.is_murdered) {
+        openRoundStartModal(currentRoom.current_round);
+      }
       playChime();
     }
 
-    // Check if player has already used all 3 likes
-    if (myLikes.length >= 3) {
-      showWaitingOverlay();
-    } else {
+    if (currentRoom.round_phase === 'dating') {
+      profileSwipeSection.classList.add('hidden');
       waitingRoundOverlay.classList.add('hidden');
-      profileSwipeSection.classList.remove('hidden');
-      renderCurrentProfile();
+      datingPhaseSection.classList.remove('hidden');
+      renderDatingPhase();
+    } else {
+      datingPhaseSection.classList.add('hidden');
+      if (myPlayer?.is_murdered) {
+        profileSwipeSection.classList.add('hidden');
+        waitingRoundOverlay.classList.add('hidden');
+        datingPhaseSection.classList.remove('hidden');
+        renderDatingPhase();
+      } else if (myLikes.length >= 3) {
+        showWaitingOverlay();
+      } else {
+        waitingRoundOverlay.classList.add('hidden');
+        profileSwipeSection.classList.remove('hidden');
+        renderCurrentProfile();
+      }
     }
 
     // Start active game polling
@@ -1333,6 +1724,21 @@ btnConfirmEndGame.addEventListener('click', async () => {
 });
 
 btnEndActiveGame.addEventListener('click', openEndGameModal);
+if (btnEndActiveGameDating) {
+  btnEndActiveGameDating.addEventListener('click', openEndGameModal);
+}
+
+if (btnConfirmDateRead) {
+  btnConfirmDateRead.addEventListener('click', handleConfirmDateRead);
+}
+
+if (btnConfirmZeroMatches) {
+  btnConfirmZeroMatches.addEventListener('click', handleConfirmZeroMatches);
+}
+
+if (btnConfirmSpectatorReady) {
+  btnConfirmSpectatorReady.addEventListener('click', handleConfirmSpectatorReady);
+}
 
 btnLeaveActiveGame.addEventListener('click', async () => {
   if (!currentRoom) return;

@@ -155,6 +155,21 @@ export async function submitLike(roomId, profileId) {
 }
 
 /**
+ * Resolve player's date selection and complete their date recap reading.
+ * @param {string} roomId
+ * @param {string|null} profileId - Chosen match profile ID, or null if 0 matches
+ */
+export async function resolvePlayerDate(roomId, profileId = null) {
+  const { data, error } = await supabase.rpc('resolve_player_date', {
+    p_room_id: roomId,
+    p_profile_id: profileId,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Fetch the full game round state (room, players, 10 round profiles, player's likes).
  */
 export async function fetchGameRoundState(roomId) {

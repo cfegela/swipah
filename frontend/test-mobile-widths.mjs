@@ -58,7 +58,10 @@ async function run() {
   console.log('📱 Starting Mobile Responsiveness & Viewport Tests...\n');
 
   const PORT = 5198;
-  const staticServer = await startStaticServer(path.resolve('dist'), PORT);
+  const distDir = fs.existsSync(path.resolve('dist'))
+    ? path.resolve('dist')
+    : path.resolve('frontend/dist');
+  const staticServer = await startStaticServer(distDir, PORT);
   console.log(`✓ Local static test server listening on http://127.0.0.1:${PORT}`);
 
   const testUrl = `http://127.0.0.1:${PORT}`;
@@ -224,6 +227,100 @@ async function run() {
             const img = document.getElementById('lightbox-img');
             img.src = '/profiles/chad-thunderclout.jpg';
             img.style.display = 'block';
+          `
+        },
+        {
+          name: 'Dating Phase - Match Picker View',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('profile-swipe-section').classList.add('hidden');
+            document.getElementById('waiting-round-overlay').classList.add('hidden');
+            const datingSec = document.getElementById('dating-phase-section');
+            datingSec.classList.remove('hidden');
+            document.getElementById('date-story-card').classList.add('hidden');
+            document.getElementById('date-zero-matches-card').classList.add('hidden');
+            document.getElementById('date-spectator-card').classList.add('hidden');
+            const picker = document.getElementById('date-picker-card');
+            picker.classList.remove('hidden');
+            document.getElementById('date-picker-grid').innerHTML = \`
+              <button class="date-picker-item">
+                <div class="date-picker-avatar"><img src="/profiles/chad-thunderclout.jpg" alt="Chad" /></div>
+                <div class="date-picker-info">
+                  <div class="date-picker-name">Chad Thunderclout, 24</div>
+                  <div class="date-picker-sub">Fitness Influencer & Day Trader • Miami, FL</div>
+                  <span class="date-picker-btn">Go on Date 🔥</span>
+                </div>
+              </button>
+              <button class="date-picker-item">
+                <div class="date-picker-avatar"><img src="/profiles/chloe-matcha.jpg" alt="Chloe" /></div>
+                <div class="date-picker-info">
+                  <div class="date-picker-name">Chloe Sterling, 29</div>
+                  <div class="date-picker-sub">Art Director • Brooklyn, NY</div>
+                  <span class="date-picker-btn">Go on Date 🔥</span>
+                </div>
+              </button>
+            \`;
+          `
+        },
+        {
+          name: 'Dating Phase - Date Recap Story View',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('profile-swipe-section').classList.add('hidden');
+            document.getElementById('waiting-round-overlay').classList.add('hidden');
+            document.getElementById('dating-phase-section').classList.remove('hidden');
+            document.getElementById('date-picker-card').classList.add('hidden');
+            document.getElementById('date-zero-matches-card').classList.add('hidden');
+            document.getElementById('date-spectator-card').classList.add('hidden');
+            const storyCard = document.getElementById('date-story-card');
+            storyCard.classList.remove('hidden');
+            document.getElementById('date-outcome-badge').className = 'date-outcome-badge date-badge-great';
+            document.getElementById('date-outcome-badge').textContent = '🌟 INCREDIBLE DATE (+1000 PTS)';
+            document.getElementById('date-partner-avatar').innerHTML = '<img src="/profiles/chad-thunderclout.jpg" alt="Chad" />';
+            document.getElementById('date-partner-name').textContent = 'Chad Thunderclout';
+            document.getElementById('date-partner-sub').textContent = '24 • Fitness Influencer & Day Trader • Miami, FL';
+            document.getElementById('date-story-content').innerHTML = '<p>You met up near South Beach. The banter clicked immediately and you spent 3 hours trading funny workout and crypto horror stories.</p><p>They paid the entire tab and walked you to your car.</p>';
+            document.getElementById('date-score-delta-val').textContent = '+1,000 pts';
+          `
+        },
+        {
+          name: 'Dating Phase - Zero Matches Conciliatory View',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('profile-swipe-section').classList.add('hidden');
+            document.getElementById('waiting-round-overlay').classList.add('hidden');
+            document.getElementById('dating-phase-section').classList.remove('hidden');
+            document.getElementById('date-picker-card').classList.add('hidden');
+            document.getElementById('date-story-card').classList.add('hidden');
+            document.getElementById('date-spectator-card').classList.add('hidden');
+            const zeroCard = document.getElementById('date-zero-matches-card');
+            zeroCard.classList.remove('hidden');
+          `
+        },
+        {
+          name: 'Dating Phase - Ghost Spectator View',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('profile-swipe-section').classList.add('hidden');
+            document.getElementById('waiting-round-overlay').classList.add('hidden');
+            document.getElementById('dating-phase-section').classList.remove('hidden');
+            document.getElementById('date-picker-card').classList.add('hidden');
+            document.getElementById('date-story-card').classList.add('hidden');
+            document.getElementById('date-zero-matches-card').classList.add('hidden');
+            const specCard = document.getElementById('date-spectator-card');
+            specCard.classList.remove('hidden');
           `
         }
       ];
