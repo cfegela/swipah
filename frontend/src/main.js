@@ -996,12 +996,12 @@ function renderDatingPhase() {
   datePickerCard.classList.remove('hidden');
 
   const countText = myMatches.length === 1 ? '1 profile' : `${myMatches.length} profiles`;
-  const instructionText = myMatches.length === 1
-    ? 'Pick your date below to see how it went:'
-    : 'Pick who you want to go on a date with this round:';
+  const instructionHtml = myMatches.length === 1
+    ? ''
+    : `<br />Pick who you want to go on a date with this round:`;
 
   if (datePickerSubheading) {
-    datePickerSubheading.innerHTML = `You matched with <strong id="date-picker-match-count" style="color: var(--accent);">${escapeHtml(countText)}</strong>!<br />${escapeHtml(instructionText)}`;
+    datePickerSubheading.innerHTML = `You matched with <strong id="date-picker-match-count" style="color: var(--accent);">${escapeHtml(countText)}</strong>!${instructionHtml}`;
   } else if (datePickerMatchCount) {
     datePickerMatchCount.textContent = countText;
   }
