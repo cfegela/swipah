@@ -181,6 +181,37 @@ async function run() {
     assert(res2.subheadingText.includes('You matched with 2 profiles!') && res2.subheadingText.includes('Pick who you want to go on a date with this round:'));
     console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction on new line: "Pick who you want to go on a date with this round:"');
 
+    // Test 3: Date Recap Subheading Renders Ampersands Correctly
+    console.log('\n3. Testing Date Recap occupation ampersand rendering...');
+    const recapAmpEval = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const selectedMatch = {
+            age: 24,
+            occupation: 'Fitness Influencer & Day Trader',
+            location: 'Miami, FL (3 miles away)'
+          };
+          const cleanLoc = (loc) => loc ? loc.replace(/\\s*\\([^)]*(?:miles?|mi\\s*away|online)[^)]*\\)/gi, '').trim() : '';
+
+          const sub = document.getElementById('date-partner-sub');
+          sub.textContent = selectedMatch.age + ' • ' + (selectedMatch.occupation || 'Mystery Job') + ' • ' + (cleanLoc(selectedMatch.location) || 'Unknown');
+
+          return {
+            subText: sub.textContent,
+            hasCorrectAmp: sub.textContent.includes('Fitness Influencer & Day Trader'),
+            hasLiteralAmpEntityInText: sub.textContent.includes('&amp;')
+          };
+        })()
+      `,
+      returnByValue: true
+    });
+
+    const res3 = recapAmpEval.result.value;
+    console.log('   Result with occupation ampersand:', res3);
+    assert.strictEqual(res3.hasCorrectAmp, true, 'datePartnerSub must contain "Fitness Influencer & Day Trader"');
+    assert.strictEqual(res3.hasLiteralAmpEntityInText, false, 'datePartnerSub.textContent must NOT contain literal "&amp;"');
+    console.log('   ✓ Date recap subtitle renders ampersands correctly as "&" without literal "&amp;"');
+
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');
   } finally {

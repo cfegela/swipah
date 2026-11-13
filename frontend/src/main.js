@@ -968,7 +968,7 @@ function renderDatingPhase() {
       : (selectedMatch.avatar_svg || '');
     datePartnerAvatar.innerHTML = avatarHtml;
     datePartnerName.textContent = selectedMatch.name;
-    datePartnerSub.textContent = `${selectedMatch.age} • ${escapeHtml(selectedMatch.occupation || 'Mystery Job')} • ${escapeHtml(cleanLocation(selectedMatch.location) || 'Unknown')}`;
+    datePartnerSub.textContent = `${selectedMatch.age} • ${selectedMatch.occupation || 'Mystery Job'} • ${cleanLocation(selectedMatch.location) || 'Unknown'}`;
 
     dateStoryContent.innerHTML = story.paragraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
