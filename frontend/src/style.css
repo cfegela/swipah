@@ -1611,18 +1611,6 @@ input[type="text"]:focus {
   margin: 0;
 }
 
-.zero-matches-advice {
-  font-size: 0.86rem;
-  color: #fed7aa;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.45;
-  text-align: left;
-}
-
 .dating-bottom-actions {
   display: flex;
   justify-content: center;

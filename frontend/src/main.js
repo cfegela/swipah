@@ -274,7 +274,6 @@ const dateZeroMatchesCard = document.getElementById('date-zero-matches-card');
 const zeroMatchesIcon = document.getElementById('zero-matches-icon');
 const zeroMatchesHeadline = document.getElementById('zero-matches-headline');
 const zeroMatchesBody = document.getElementById('zero-matches-body');
-const zeroMatchesAdvice = document.getElementById('zero-matches-advice');
 const btnConfirmZeroMatches = document.getElementById('btn-confirm-zero-matches');
 const zeroMatchesPlayersStatusBox = document.getElementById('zero-matches-players-status-box');
 const zeroMatchesPlayersList = document.getElementById('zero-matches-players-list');
@@ -941,8 +940,10 @@ function renderDatingPhase() {
     const msg = getConciliatoryMessage(currentRoom?.current_round || 1);
     zeroMatchesIcon.textContent = msg.icon;
     zeroMatchesHeadline.textContent = msg.headline;
-    zeroMatchesBody.innerHTML = `<p>${escapeHtml(msg.body)}</p>`;
-    zeroMatchesAdvice.textContent = `💡 ${msg.advice}`;
+    zeroMatchesBody.innerHTML = `
+      <p>${escapeHtml(msg.body)}</p>
+      <p>💡 ${escapeHtml(msg.advice)}</p>
+    `;
 
     if (myPlayer.date_completed) {
       btnConfirmZeroMatches.disabled = true;
