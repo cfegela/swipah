@@ -122,7 +122,7 @@ async function run() {
             : 'Pick who you want to go on a date with this round:';
 
           const sub = document.getElementById('date-picker-subheading');
-          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
+          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>!<br />' + instructionText;
 
           const pickerCard = document.getElementById('date-picker-card');
           const storyCard = document.getElementById('date-story-card');
@@ -149,8 +149,8 @@ async function run() {
     assert.strictEqual(res1.storyHidden, true, 'Story card must be hidden before date is chosen');
     assert.strictEqual(res1.headingText, 'Pick Your Date', 'Heading should be "Pick Your Date"');
     assert.strictEqual(res1.matchCountText, '1 profile');
-    assert(res1.subheadingText.includes('You matched with 1 profile! Pick your date below to see how it went:'));
-    console.log('   ✓ Single match shows picker card with singular "1 profile" and instruction: "Pick your date below to see how it went:"');
+    assert(res1.subheadingText.includes('You matched with 1 profile!') && res1.subheadingText.includes('Pick your date below to see how it went:'));
+    console.log('   ✓ Single match shows picker card with singular "1 profile" and instruction on new line: "Pick your date below to see how it went:"');
 
     // Test 2: Multiple Matches (e.g. 2 profiles)
     console.log('\n2. Testing Dating Phase with 2 matches...');
@@ -164,7 +164,7 @@ async function run() {
             : 'Pick who you want to go on a date with this round:';
 
           const sub = document.getElementById('date-picker-subheading');
-          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
+          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>!<br />' + instructionText;
 
           return {
             subheadingText: sub.textContent.trim(),
@@ -178,8 +178,8 @@ async function run() {
     const res2 = multiMatchEval.result.value;
     console.log('   Result with 2 matches:', res2);
     assert.strictEqual(res2.matchCountText, '2 profiles');
-    assert(res2.subheadingText.includes('You matched with 2 profiles! Pick who you want to go on a date with this round:'));
-    console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction: "Pick who you want to go on a date with this round:"');
+    assert(res2.subheadingText.includes('You matched with 2 profiles!') && res2.subheadingText.includes('Pick who you want to go on a date with this round:'));
+    console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction on new line: "Pick who you want to go on a date with this round:"');
 
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');
