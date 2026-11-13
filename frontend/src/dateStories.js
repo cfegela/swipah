@@ -1,9 +1,13 @@
 // dateStories.js - Generates humorous, personalized date recaps based on persona quirks & outcome
 
+export function cleanLocation(loc) {
+  return loc ? loc.replace(/\s*\([^)]*(?:miles?|mi\s*away|online)[^)]*\)/gi, '').trim() : '';
+}
+
 export function getDateStory(profile, outcome) {
   const name = profile?.name || 'Your Date';
   const occupation = profile?.occupation || 'their mysterious job';
-  const location = profile?.location || 'somewhere in town';
+  const location = cleanLocation(profile?.location) || 'somewhere in town';
   const redFlags = profile?.red_flags || [];
   const greenFlags = profile?.green_flags || [];
   const promptAnswer = profile?.prompt_answer || 'something unforgettable';

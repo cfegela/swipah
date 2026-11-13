@@ -1,6 +1,6 @@
 import './style.css';
 import QRCode from 'qrcode';
-import { getDateStory, getConciliatoryMessage } from './dateStories.js';
+import { getDateStory, getConciliatoryMessage, cleanLocation } from './dateStories.js';
 import {
   ensureAnonymousSession,
   createRoom,
@@ -984,7 +984,7 @@ function renderDatingPhase() {
       : (selectedMatch.avatar_svg || '');
     datePartnerAvatar.innerHTML = avatarHtml;
     datePartnerName.textContent = selectedMatch.name;
-    datePartnerSub.textContent = `${selectedMatch.age} • ${escapeHtml(selectedMatch.occupation || 'Mystery Job')} • ${escapeHtml(selectedMatch.location || 'Unknown')}`;
+    datePartnerSub.textContent = `${selectedMatch.age} • ${escapeHtml(selectedMatch.occupation || 'Mystery Job')} • ${escapeHtml(cleanLocation(selectedMatch.location) || 'Unknown')}`;
 
     dateStoryContent.innerHTML = story.paragraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
@@ -1024,7 +1024,7 @@ function renderDatingPhase() {
           <div class="date-picker-avatar">${avatarHtml}</div>
           <div class="date-picker-info">
             <div class="date-picker-name">${escapeHtml(match.name)}, ${match.age}</div>
-            <div class="date-picker-sub">${escapeHtml(match.occupation || '')} • ${escapeHtml(match.location || '')}</div>
+            <div class="date-picker-sub">${escapeHtml(match.occupation || '')} • ${escapeHtml(cleanLocation(match.location) || '')}</div>
             <span class="date-picker-btn">Go on Date 🔥</span>
           </div>
         </button>
@@ -1214,7 +1214,7 @@ function renderCurrentProfile() {
         </div>
         <div class="profile-field-row">
           <span class="profile-field-label">Location:</span>
-          <span class="profile-field-value">${escapeHtml(profile.location)}</span>
+          <span class="profile-field-value">${escapeHtml(cleanLocation(profile.location))}</span>
         </div>
         <div class="profile-field-section">
           <div class="profile-field-label">Description:</div>
