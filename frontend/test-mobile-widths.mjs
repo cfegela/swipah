@@ -214,6 +214,17 @@ async function run() {
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('btn-end-active-game').style.display = 'inline-flex';
           `
+        },
+        {
+          name: 'Photo Lightbox Modal',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            const modal = document.getElementById('photo-lightbox-modal');
+            modal.classList.remove('hidden');
+            const img = document.getElementById('lightbox-img');
+            img.src = '/profiles/chad-thunderclout.jpg';
+            img.style.display = 'block';
+          `
         }
       ];
 

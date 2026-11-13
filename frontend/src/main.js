@@ -208,6 +208,12 @@ const matchProfileName = document.getElementById('match-profile-name');
 const matchProfileDesc = document.getElementById('match-profile-desc');
 const btnCloseMatchModal = document.getElementById('btn-close-match-modal');
 
+// DOM Elements: Photo Lightbox Modal
+const photoLightboxModal = document.getElementById('photo-lightbox-modal');
+const btnCloseLightbox = document.getElementById('btn-close-lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxSvg = document.getElementById('lightbox-svg');
+
 // DOM Elements: Alerts
 const alertBox = document.getElementById('alert-box');
 const alertMsg = document.getElementById('alert-msg');
@@ -389,6 +395,38 @@ function closeMatchModal() {
       currentProfileIdx++;
     }
     renderCurrentProfile();
+  }
+}
+
+// Photo Lightbox Modal
+function openPhotoLightbox(profile) {
+  if (!profile || !photoLightboxModal) return;
+
+  if (profile.avatar_url) {
+    lightboxImg.src = profile.avatar_url;
+    lightboxImg.alt = profile.name ? `${profile.name}'s photo` : 'Full profile photo';
+    lightboxImg.style.display = 'block';
+    lightboxSvg.style.display = 'none';
+    lightboxSvg.innerHTML = '';
+  } else if (profile.avatar_svg) {
+    lightboxImg.src = '';
+    lightboxImg.style.display = 'none';
+    lightboxSvg.style.display = 'flex';
+    lightboxSvg.innerHTML = profile.avatar_svg;
+  } else {
+    return;
+  }
+
+  photoLightboxModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePhotoLightbox() {
+  if (photoLightboxModal && !photoLightboxModal.classList.contains('hidden')) {
+    photoLightboxModal.classList.add('hidden');
+    document.body.style.overflow = '';
+    if (lightboxImg) lightboxImg.src = '';
+    if (lightboxSvg) lightboxSvg.innerHTML = '';
   }
 }
 
@@ -658,6 +696,7 @@ function showLandingView() {
   closeEndGameModal();
   closeRoundStartModal();
   matchModal.classList.add('hidden');
+  closePhotoLightbox();
 
   btnEndActiveGame.style.display = 'none';
   btnLeaveActiveGame.style.display = 'none';
@@ -796,9 +835,17 @@ function renderCurrentProfile() {
   profileCardWrapper.innerHTML = `
     <div class="dating-profile-card" id="active-profile-card">
       ${stampHtml}
-      <div class="profile-hero">
+      <div class="profile-hero" title="Tap to view full image" role="button" aria-label="Tap to view full image">
         ${avatarHtml}
         <div class="profile-hero-gradient"></div>
+        <div class="profile-expand-hint" aria-hidden="true" title="View full photo">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </div>
         <div class="profile-header-overlay">
           <span class="profile-name">${escapeHtml(profile.name)}</span>
           <span class="profile-age">${profile.age}</span>
@@ -862,6 +909,7 @@ let touchStartX = 0;
 let touchStartY = 0;
 let isPointerDragging = false;
 let isPointerSwiping = false;
+let hasSwipedOrMoved = false;
 
 function initSwipeGestures() {
   if (!profileCardWrapper) return;
@@ -872,6 +920,7 @@ function initSwipeGestures() {
     touchStartY = e.clientY;
     isPointerDragging = true;
     isPointerSwiping = false;
+    hasSwipedOrMoved = false;
   });
 
   window.addEventListener('pointermove', (e) => {
@@ -881,6 +930,10 @@ function initSwipeGestures() {
 
     const diffX = e.clientX - touchStartX;
     const diffY = e.clientY - touchStartY;
+
+    if (Math.hypot(diffX, diffY) > 8) {
+      hasSwipedOrMoved = true;
+    }
 
     if (!isPointerSwiping) {
       if (Math.abs(diffX) > 12 && Math.abs(diffX) > Math.abs(diffY)) {
@@ -944,6 +997,40 @@ function initSwipeGestures() {
 
   window.addEventListener('pointerup', handlePointerEnd);
   window.addEventListener('pointercancel', handlePointerEnd);
+
+  // Tap on profile hero area to open full-screen photo lightbox
+  profileCardWrapper.addEventListener('click', (e) => {
+    const hero = e.target.closest('.profile-hero');
+    if (!hero) return;
+    if (hasSwipedOrMoved) return;
+
+    const profile =
+      currentRoundProfiles && currentRoundProfiles[currentProfileIdx]
+        ? currentRoundProfiles[currentProfileIdx]
+        : null;
+
+    if (profile) {
+      openPhotoLightbox(profile);
+    } else {
+      // Fallback: extract directly from hero DOM
+      const photoEl = hero.querySelector('.profile-hero-photo');
+      const svgEl = hero.querySelector('svg:not(.profile-expand-hint svg)');
+      const nameEl = hero.querySelector('.profile-name');
+      const name = nameEl ? nameEl.textContent.trim() : '';
+
+      if (photoEl && photoEl.src) {
+        openPhotoLightbox({
+          name,
+          avatar_url: photoEl.getAttribute('src') || photoEl.src
+        });
+      } else if (svgEl) {
+        openPhotoLightbox({
+          name,
+          avatar_svg: svgEl.outerHTML
+        });
+      }
+    }
+  });
 }
 
 // Like Profile Action (Only triggered by clicking ❤️ button)
@@ -1218,6 +1305,25 @@ btnLikeProfile.addEventListener('click', handleLikeProfile);
 btnStartRound.addEventListener('click', closeRoundStartModal);
 
 btnCloseMatchModal.addEventListener('click', closeMatchModal);
+
+if (btnCloseLightbox) {
+  btnCloseLightbox.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closePhotoLightbox();
+  });
+}
+
+if (photoLightboxModal) {
+  photoLightboxModal.addEventListener('click', () => {
+    closePhotoLightbox();
+  });
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && photoLightboxModal && !photoLightboxModal.classList.contains('hidden')) {
+    closePhotoLightbox();
+  }
+});
 
 // Event Listeners: End & Leave Game
 btnCancelEndGame.addEventListener('click', closeEndGameModal);
