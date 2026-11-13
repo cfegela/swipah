@@ -416,7 +416,7 @@ function openMatchModal(profile) {
     : (profile.avatar_svg || '');
   matchProfileAvatar.innerHTML = avatarHtml;
   matchProfileName.textContent = `Matched with ${profile.name}!`;
-  matchProfileDesc.textContent = `You and ${profile.name} liked each other! ❤️`;
+  matchProfileDesc.textContent = `You and ${profile.name} liked each other!`;
 
   matchModal.classList.remove('hidden');
 }
