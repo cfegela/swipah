@@ -188,13 +188,11 @@ async function run() {
         (() => {
           const selectedMatch = {
             age: 24,
-            occupation: 'Fitness Influencer & Day Trader',
-            location: 'Miami, FL (3 miles away)'
+            occupation: 'Fitness Influencer & Day Trader'
           };
-          const cleanLoc = (loc) => loc ? loc.replace(/\\s*\\([^)]*(?:miles?|mi\\s*away|online)[^)]*\\)/gi, '').trim() : '';
 
           const sub = document.getElementById('date-partner-sub');
-          sub.textContent = selectedMatch.age + ' • ' + (selectedMatch.occupation || 'Mystery Job') + ' • ' + (cleanLoc(selectedMatch.location) || 'Unknown');
+          sub.textContent = selectedMatch.age + ' • ' + (selectedMatch.occupation || 'Mystery Job');
 
           return {
             subText: sub.textContent,

@@ -7,7 +7,6 @@ export function cleanLocation(loc) {
 export function getDateStory(profile, outcome) {
   const name = profile?.name || 'Your Date';
   const occupation = profile?.occupation || 'their mysterious job';
-  const location = cleanLocation(profile?.location) || 'somewhere in town';
   const redFlags = profile?.red_flags || [];
   const greenFlags = profile?.green_flags || [];
   const promptAnswer = profile?.prompt_answer || 'something unforgettable';
@@ -30,7 +29,7 @@ export function getDateStory(profile, outcome) {
       badgeClass = 'date-badge-great';
       scoreDeltaText = '+1,000 pts';
       paragraphs = [
-        `You met up with ${name} near ${location}. Despite working as a ${occupation}, they showed up looking remarkably put-together and disarmingly charming. The conversation clicked immediately—what began as a quick drink turned into three hours of rapid-fire banter and genuine laughter.`,
+        `You met up with ${name} for evening drinks. Despite working as a ${occupation}, they showed up looking remarkably put-together and disarmingly charming. The conversation clicked immediately—what began as a quick drink turned into three hours of rapid-fire banter and genuine laughter.`,
         `Sure, there were warning signs: ${name.split(' ')[0]} casually mentioned how they ${rf1.toLowerCase()}, but they completely made up for it because they ${gf1.toLowerCase()} and ${gf2.toLowerCase()}.`,
         `By the time dessert arrived, you were both trading inside jokes about "${promptAnswer}". They insisted on covering the bill, walked you to your ride with a lingering hug, and sent a sweet text before you even made it home. A storybook first date!`
       ];
@@ -42,7 +41,7 @@ export function getDateStory(profile, outcome) {
       badgeClass = 'date-badge-good';
       scoreDeltaText = '+500 pts';
       paragraphs = [
-        `You agreed to grab casual drinks with ${name} around ${location}. As a ${occupation}, they certainly had plenty of eccentric work anecdotes to keep the conversation rolling without any awkward pauses.`,
+        `You agreed to grab casual drinks with ${name}. As a ${occupation}, they certainly had plenty of eccentric work anecdotes to keep the conversation rolling without any awkward pauses.`,
         `The date had a few quirky bumps—at one point, ${name.split(' ')[0]} unabashedly admitted that they ${rf1.toLowerCase()}. You raised an eyebrow, but to their credit, they also ${gf1.toLowerCase()}, which helped balance out the weirdness.`,
         `You parted ways after two drinks on very friendly terms. Maybe it wasn't earth-shattering fireworks, but you had a fun night, shared a laugh, and didn't regret swiping right.`
       ];
@@ -54,7 +53,7 @@ export function getDateStory(profile, outcome) {
       badgeClass = 'date-badge-bad';
       scoreDeltaText = '-500 pts';
       paragraphs = [
-        `Things got off to an alarming start when ${name} arrived 25 minutes late to the venue in ${location}, blaming traffic and immediately launching into a monologue about how they ${rf1.toLowerCase()}.`,
+        `Things got off to an alarming start when ${name} arrived 25 minutes late to the venue, blaming traffic and immediately launching into a monologue about how they ${rf1.toLowerCase()}.`,
         `Throughout dinner, ${name.split(' ')[0]} lived up to their worst reputation. Not only did they ${rf2.toLowerCase()}, but they also started debating the server about "${promptAnswer}" until half the dining room was uncomfortably staring.`,
         `When the check landed on the table, ${name.split(' ')[0]} suddenly claimed their card was "demagnetized" and slipped into the restroom, leaving you to pay the entire bill alone. You blocked their number while waiting on the curb for your ride.`
       ];
@@ -66,7 +65,7 @@ export function getDateStory(profile, outcome) {
       badgeClass = 'date-badge-murdered';
       scoreDeltaText = 'Eliminated';
       paragraphs = [
-        `Everything started innocently enough over evening drinks with ${name} in ${location}. They seemed fascinating—after all, how often do you meet a ${occupation}? But as the night wore on, the red flags morphed into flashing crimson sirens.`,
+        `Everything started innocently enough over evening drinks with ${name}. They seemed fascinating—after all, how often do you meet a ${occupation}? But as the night wore on, the red flags morphed into flashing crimson sirens.`,
         `"Hey, my apartment is actually a bit noisy," ${name.split(' ')[0]} whispered, flashing a strained smile. "Why don't we head to my secondary location? It's completely soundproof and deep in the woods." Against every true-crime podcast lesson you've ever heard, you actually got into their car.`,
         `As the trunk locked from the outside and the engine sped into the fog, you realized that when they said they ${rf1.toLowerCase()}, it wasn't a metaphor. You have been tragically eliminated from Swipah! You must now spend the rest of the game haunting the lobby as a spectator ghost.`
       ];
@@ -77,7 +76,7 @@ export function getDateStory(profile, outcome) {
       badgeText = 'DATE RECAP';
       badgeClass = 'date-badge-good';
       scoreDeltaText = '0 pts';
-      paragraphs = [`You spent time with ${name} in ${location}.`];
+      paragraphs = [`You spent time with ${name}.`];
       break;
   }
 
