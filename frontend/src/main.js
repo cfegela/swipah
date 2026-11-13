@@ -1012,7 +1012,7 @@ function renderDatingPhase() {
           <div class="date-picker-info">
             <div class="date-picker-name">${escapeHtml(match.name)}, ${match.age}</div>
             <div class="date-picker-sub">${escapeHtml(match.occupation || '')} • ${escapeHtml(cleanLocation(match.location) || '')}</div>
-            <span class="date-picker-btn">Go on Date 🔥</span>
+            <span class="date-picker-btn">Go on Date</span>
           </div>
         </button>
       `;

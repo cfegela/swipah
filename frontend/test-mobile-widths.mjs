@@ -251,7 +251,7 @@ async function run() {
                 <div class="date-picker-info">
                   <div class="date-picker-name">Chad Thunderclout, 24</div>
                   <div class="date-picker-sub">Fitness Influencer & Day Trader • Miami, FL</div>
-                  <span class="date-picker-btn">Go on Date 🔥</span>
+                  <span class="date-picker-btn">Go on Date</span>
                 </div>
               </button>
               <button class="date-picker-item">
@@ -259,7 +259,7 @@ async function run() {
                 <div class="date-picker-info">
                   <div class="date-picker-name">Chloe Sterling, 29</div>
                   <div class="date-picker-sub">Art Director • Brooklyn, NY</div>
-                  <span class="date-picker-btn">Go on Date 🔥</span>
+                  <span class="date-picker-btn">Go on Date</span>
                 </div>
               </button>
             \`;

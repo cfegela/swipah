@@ -1335,19 +1335,6 @@ input[type="text"]:focus {
   margin-bottom: 1.25rem;
 }
 
-.dating-badge-pill {
-  display: inline-block;
-  background: rgba(184, 40, 27, 0.25);
-  border: 1px solid var(--swipah-flame);
-  color: #ffa387;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 0.3rem 0.85rem;
-  border-radius: 9999px;
-  margin-bottom: 0.65rem;
-}
-
 .dating-heading {
   font-size: 1.6rem;
   font-weight: 800;
