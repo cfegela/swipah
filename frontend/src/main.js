@@ -622,6 +622,7 @@ function showLobbyView(room, players) {
   currentRoom = room;
   currentPlayers = players;
 
+  document.getElementById('app').classList.remove('in-game');
   document.getElementById('app').classList.add('in-lobby');
   landingView.classList.add('hidden');
   gameView.classList.add('hidden');
@@ -658,7 +659,7 @@ function showLandingView() {
   btnEndActiveGame.style.display = 'none';
   btnLeaveActiveGame.style.display = 'none';
 
-  document.getElementById('app').classList.remove('in-lobby');
+  document.getElementById('app').classList.remove('in-lobby', 'in-game');
   lobbyView.classList.add('hidden');
   gameView.classList.add('hidden');
   landingView.classList.remove('hidden');
@@ -910,6 +911,7 @@ function initSwipeGestures() {
       setTimeout(() => {
         currentProfileIdx++;
         renderCurrentProfile();
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }, 180);
     } else if (diffX > SWIPE_THRESHOLD && currentProfileIdx > 0) {
       // Swiped Right -> Previous Profile
@@ -919,6 +921,7 @@ function initSwipeGestures() {
       setTimeout(() => {
         currentProfileIdx--;
         renderCurrentProfile();
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }, 180);
     } else {
       // Snap back to center
@@ -1005,7 +1008,8 @@ async function handleLikeProfile() {
 
 // Switch to Active Game View
 async function loadAndShowGameView() {
-  document.getElementById('app').classList.add('in-lobby');
+  document.getElementById('app').classList.remove('in-lobby');
+  document.getElementById('app').classList.add('in-game');
   landingView.classList.add('hidden');
   lobbyView.classList.add('hidden');
   gameView.classList.remove('hidden');
@@ -1187,6 +1191,7 @@ btnPrevProfile.addEventListener('click', () => {
   if (currentProfileIdx > 0) {
     currentProfileIdx--;
     renderCurrentProfile();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 });
 
@@ -1194,6 +1199,7 @@ btnNextProfile.addEventListener('click', () => {
   if (currentProfileIdx < currentRoundProfiles.length - 1) {
     currentProfileIdx++;
     renderCurrentProfile();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 });
 

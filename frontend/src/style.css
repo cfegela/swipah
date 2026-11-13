@@ -118,26 +118,31 @@ header {
   transform: scale(1.015);
 }
 
-/* Compact header when inside the Game Lobby / subsequent pages */
-#app.in-lobby header {
+/* Compact header when inside the Game Lobby / Active Game */
+#app.in-lobby header,
+#app.in-game header {
   padding-bottom: 0.25rem;
 }
 
-#app.in-lobby .logo-wrapper {
-  max-width: 280px;
+#app.in-lobby .logo-wrapper,
+#app.in-game .logo-wrapper {
+  max-width: 240px;
   padding: 0;
 }
 
-#app.in-lobby .hero-logo {
-  max-width: 280px;
+#app.in-lobby .hero-logo,
+#app.in-game .hero-logo {
+  max-width: 240px;
 }
 
 @media (min-width: 640px) {
-  #app.in-lobby .logo-wrapper {
-    max-width: 320px;
+  #app.in-lobby .logo-wrapper,
+  #app.in-game .logo-wrapper {
+    max-width: 280px;
   }
-  #app.in-lobby .hero-logo {
-    max-width: 320px;
+  #app.in-lobby .hero-logo,
+  #app.in-game .hero-logo {
+    max-width: 280px;
   }
 }
 
@@ -713,6 +718,13 @@ input[type="text"]:focus {
    GAME VIEW & DATING PROFILE SWIPING
    ========================================================= */
 
+#game-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 /* Game HUD Bar */
 .game-hud-bar {
   display: flex;
@@ -767,7 +779,7 @@ input[type="text"]:focus {
   min-height: 36px;
 }
 
-/* Profile Swipe Section */
+/* Profile Swipe Section (Natural document flow) */
 .profile-swipe-section {
   display: flex;
   flex-direction: column;
@@ -775,13 +787,12 @@ input[type="text"]:focus {
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
-  gap: 0.85rem;
+  gap: 1.25rem;
 }
 
-/* Profile Card Container (Occupies ~65-70% mobile viewport height) */
+/* Profile Card Container */
 .profile-card-wrapper {
   width: 100%;
-  height: min(67vh, 580px);
   position: relative;
   touch-action: pan-y;
   user-select: none;
@@ -794,18 +805,15 @@ input[type="text"]:focus {
 
 .dating-profile-card {
   width: 100%;
-  height: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-card-accent);
   border-radius: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(122, 12, 35, 0.2);
   transition: transform 0.22s ease-out, opacity 0.22s ease-out;
-  -webkit-overflow-scrolling: touch;
 }
 
 .dating-profile-card.dragging {
@@ -1036,8 +1044,10 @@ input[type="text"]:focus {
   font-weight: 600;
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.05);
-  padding: 0.2rem 0.75rem;
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.85rem;
   border-radius: 9999px;
+  margin-bottom: 1.5rem;
 }
 
 /* Match Modal Specifics */
