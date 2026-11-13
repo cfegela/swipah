@@ -1,0 +1,191 @@
+import { spawn } from 'node:child_process';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert';
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function startStaticServer(dir, port) {
+  const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.svg': 'image/svg+xml'
+  };
+
+  const server = http.createServer((req, res) => {
+    let filePath = path.join(dir, req.url === '/' ? 'index.html' : req.url);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(dir, 'index.html');
+    }
+    const ext = path.extname(filePath);
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    try {
+      const data = fs.readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    } catch (e) {
+      res.writeHead(500);
+      res.end('Error loading ' + req.url);
+    }
+  });
+
+  return new Promise((resolve) => {
+    server.listen(port, '127.0.0.1', () => resolve(server));
+  });
+}
+
+async function getDebuggerUrl(port) {
+  for (let i = 0; i < 30; i++) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/json`);
+      const data = await res.json();
+      if (data && data[0] && data[0].webSocketDebuggerUrl) {
+        return data[0].webSocketDebuggerUrl;
+      }
+    } catch (e) {}
+    await wait(200);
+  }
+  throw new Error('Chrome remote debugger not responding');
+}
+
+async function run() {
+  console.log('🧪 Testing Date Picker with 1 Match vs Multiple Matches...\n');
+  const PORT = 5205;
+  const DEBUG_PORT = 9226;
+  const distDir = fs.existsSync(path.resolve('dist'))
+    ? path.resolve('dist')
+    : path.resolve('frontend/dist');
+  const staticServer = await startStaticServer(distDir, PORT);
+
+  const chrome = spawn(
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    [
+      '--headless=new',
+      `--remote-debugging-port=${DEBUG_PORT}`,
+      '--window-size=375,812',
+      '--disable-gpu',
+      '--no-sandbox',
+      `http://127.0.0.1:${PORT}`
+    ],
+    { stdio: 'ignore' }
+  );
+
+  try {
+    const wsUrl = await getDebuggerUrl(DEBUG_PORT);
+    const ws = new WebSocket(wsUrl);
+    await new Promise((resolve) => ws.onopen = resolve);
+
+    let msgId = 1;
+    function send(method, params = {}) {
+      return new Promise((resolve, reject) => {
+        const id = msgId++;
+        const handler = (evt) => {
+          const msg = JSON.parse(evt.data);
+          if (msg.id === id) {
+            ws.removeEventListener('message', handler);
+            if (msg.error) reject(msg.error);
+            else resolve(msg.result);
+          }
+        };
+        ws.addEventListener('message', handler);
+        ws.send(JSON.stringify({ id, method, params }));
+      });
+    }
+
+    await send('Runtime.enable');
+    await wait(800);
+
+    // Test 1: Single Match (1 profile)
+    console.log('1. Testing Dating Phase with 1 match...');
+    const singleMatchEval = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          // Prepare view
+          document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+          document.getElementById('landing-view').classList.add('hidden');
+          document.getElementById('lobby-view').classList.add('hidden');
+          document.getElementById('game-view').classList.remove('hidden');
+          document.getElementById('profile-swipe-section').classList.add('hidden');
+          document.getElementById('waiting-round-overlay').classList.add('hidden');
+          document.getElementById('dating-phase-section').classList.remove('hidden');
+
+          // Simulate 1 match
+          const count = 1;
+          const countText = count === 1 ? '1 profile' : count + ' profiles';
+          const instructionText = count === 1
+            ? 'Choose your date below to see how it went:'
+            : 'Choose who you want to go on a date with this round:';
+
+          const sub = document.getElementById('date-picker-subheading');
+          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
+
+          const pickerCard = document.getElementById('date-picker-card');
+          const storyCard = document.getElementById('date-story-card');
+          pickerCard.classList.remove('hidden');
+          storyCard.classList.add('hidden');
+
+          return {
+            pickerHidden: pickerCard.classList.contains('hidden'),
+            storyHidden: storyCard.classList.contains('hidden'),
+            subheadingText: sub.textContent.trim(),
+            matchCountText: document.getElementById('date-picker-match-count').textContent.trim()
+          };
+        })()
+      `,
+      returnByValue: true
+    });
+
+    const res1 = singleMatchEval.result.value;
+    console.log('   Result with 1 match:', res1);
+    assert.strictEqual(res1.pickerHidden, false, 'Picker card must NOT be hidden when there is 1 match');
+    assert.strictEqual(res1.storyHidden, true, 'Story card must be hidden before date is chosen');
+    assert.strictEqual(res1.matchCountText, '1 profile');
+    assert(res1.subheadingText.includes('You matched with 1 profile! Choose your date below to see how it went:'));
+    console.log('   ✓ Single match shows picker card with singular "1 profile" and instruction: "Choose your date below to see how it went:"');
+
+    // Test 2: Multiple Matches (e.g. 2 profiles)
+    console.log('\n2. Testing Dating Phase with 2 matches...');
+    const multiMatchEval = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const count = 2;
+          const countText = count === 1 ? '1 profile' : count + ' profiles';
+          const instructionText = count === 1
+            ? 'Choose your date below to see how it went:'
+            : 'Choose who you want to go on a date with this round:';
+
+          const sub = document.getElementById('date-picker-subheading');
+          sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
+
+          return {
+            subheadingText: sub.textContent.trim(),
+            matchCountText: document.getElementById('date-picker-match-count').textContent.trim()
+          };
+        })()
+      `,
+      returnByValue: true
+    });
+
+    const res2 = multiMatchEval.result.value;
+    console.log('   Result with 2 matches:', res2);
+    assert.strictEqual(res2.matchCountText, '2 profiles');
+    assert(res2.subheadingText.includes('You matched with 2 profiles! Choose who you want to go on a date with this round:'));
+    console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction: "Choose who you want to go on a date with this round:"');
+
+    ws.close();
+    console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');
+  } finally {
+    chrome.kill();
+    staticServer.close();
+  }
+}
+
+run().catch((err) => {
+  console.error('Test failed:', err);
+  process.exit(1);
+});

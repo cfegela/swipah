@@ -11,7 +11,8 @@
     "test:gameplay": "node test-round-gameplay.mjs",
     "test:mobile": "node test-mobile-widths.mjs",
     "test:lightbox": "node test-lightbox.mjs",
-    "test:all": "node test-lobby.mjs && node test-round-gameplay.mjs && node test-mobile-widths.mjs && node test-lightbox.mjs",
+    "test:picker": "node test-picker-variations.mjs",
+    "test:all": "node test-lobby.mjs && node test-round-gameplay.mjs && node test-mobile-widths.mjs && node test-lightbox.mjs && node test-picker-variations.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

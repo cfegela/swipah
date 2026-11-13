@@ -257,6 +257,7 @@ const totalProfilesNum = document.getElementById('total-profiles-num');
 const datingPhaseSection = document.getElementById('dating-phase-section');
 const datePickerCard = document.getElementById('date-picker-card');
 const datePickerGrid = document.getElementById('date-picker-grid');
+const datePickerSubheading = document.getElementById('date-picker-subheading');
 const datePickerMatchCount = document.getElementById('date-picker-match-count');
 
 const dateStoryCard = document.getElementById('date-story-card');
@@ -944,11 +945,7 @@ function renderDatingPhase() {
     return;
   }
 
-  // 3. One or More Matches
-  if (myMatches.length === 1 && !chosenDateProfileId) {
-    chosenDateProfileId = myMatches[0].profile_id || myMatches[0].id;
-  }
-
+  // 3. Match Selected: Show Date Story Recap
   const selectedMatch = myMatches.find(
     (m) => (m.profile_id || m.id) === (chosenDateProfileId || myPlayer.selected_date_profile_id)
   );
@@ -992,13 +989,22 @@ function renderDatingPhase() {
     return;
   }
 
-  // 4. Multiple matches and hasn't chosen yet: Show Picker Grid
+  // 4. One or More Matches and hasn't chosen yet: Show Picker Grid
   dateStoryCard.classList.add('hidden');
   dateZeroMatchesCard.classList.add('hidden');
   dateSpectatorCard.classList.add('hidden');
   datePickerCard.classList.remove('hidden');
 
-  datePickerMatchCount.textContent = `${myMatches.length} profiles`;
+  const countText = myMatches.length === 1 ? '1 profile' : `${myMatches.length} profiles`;
+  const instructionText = myMatches.length === 1
+    ? 'Choose your date below to see how it went:'
+    : 'Choose who you want to go on a date with this round:';
+
+  if (datePickerSubheading) {
+    datePickerSubheading.innerHTML = `You matched with <strong id="date-picker-match-count" style="color: var(--accent);">${escapeHtml(countText)}</strong>! ${escapeHtml(instructionText)}`;
+  } else if (datePickerMatchCount) {
+    datePickerMatchCount.textContent = countText;
+  }
   datePickerGrid.innerHTML = myMatches
     .map((match) => {
       const matchId = match.profile_id || match.id;
