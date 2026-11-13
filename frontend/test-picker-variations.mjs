@@ -212,6 +212,37 @@ async function run() {
     assert.strictEqual(res3.hasLiteralAmpEntityInText, false, 'datePartnerSub.textContent must NOT contain literal "&amp;"');
     console.log('   ✓ Date recap subtitle renders ampersands correctly as "&" without literal "&amp;"');
 
+    // Test 4: End Game buttons styling consistency
+    console.log('\n4. Testing End Game buttons consistent red outline styling...');
+    const endGameStyleEval = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const btnSwiping = document.getElementById('btn-end-active-game');
+          const btnDating = document.getElementById('btn-end-active-game-dating');
+
+          const s1 = window.getComputedStyle(btnSwiping);
+          const s2 = window.getComputedStyle(btnDating);
+
+          return {
+            swipingColor: s1.color,
+            swipingBg: s1.backgroundColor,
+            swipingBorder: s1.borderColor,
+            datingColor: s2.color,
+            datingBg: s2.backgroundColor,
+            datingBorder: s2.borderColor
+          };
+        })()
+      `,
+      returnByValue: true
+    });
+
+    const res4 = endGameStyleEval.result.value;
+    console.log('   End game button styles:', res4);
+    assert.strictEqual(res4.swipingColor, res4.datingColor, 'Both End Game buttons must have the same text color');
+    assert.strictEqual(res4.swipingBg, res4.datingBg, 'Both End Game buttons must have transparent background');
+    assert.strictEqual(res4.swipingBorder, res4.datingBorder, 'Both End Game buttons must have red outline border');
+    console.log('   ✓ Both End Game buttons on swiping and dating pages share identical red outline styling');
+
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');
   } finally {

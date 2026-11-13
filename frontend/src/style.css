@@ -1162,7 +1162,9 @@ input[type="text"]:focus {
   margin-bottom: 1.5rem;
 }
 
-#btn-end-active-game {
+.btn-danger-outline,
+#btn-end-active-game,
+#btn-end-active-game-dating {
   background: transparent !important;
   border: 1px solid rgba(220, 38, 38, 0.45) !important;
   color: #dc2626 !important;
@@ -1171,7 +1173,9 @@ input[type="text"]:focus {
   transition: all 0.2s ease;
 }
 
-#btn-end-active-game:not(:disabled):hover {
+.btn-danger-outline:not(:disabled):hover,
+#btn-end-active-game:not(:disabled):hover,
+#btn-end-active-game-dating:not(:disabled):hover {
   background: rgba(220, 38, 38, 0.12) !important;
   border-color: rgba(239, 68, 68, 0.7) !important;
   color: #ef4444 !important;
@@ -1698,6 +1702,7 @@ input[type="text"]:focus {
 .dating-bottom-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
   margin-bottom: 1.5rem;
 }
