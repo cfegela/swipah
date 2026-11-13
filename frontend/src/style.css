@@ -667,6 +667,26 @@ input[type="text"]:focus {
   }
 }
 
+/* Round Start Modal List */
+.round-start-list {
+  text-align: left;
+  display: inline-block;
+  margin: 0.25rem auto 0.75rem;
+  padding-left: 1.25rem;
+  list-style-type: disc;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.round-start-list li {
+  margin-bottom: 0.35rem;
+}
+
+.round-start-list li:last-child {
+  margin-bottom: 0;
+}
+
 .actions-row {
   display: flex;
   gap: 0.5rem;

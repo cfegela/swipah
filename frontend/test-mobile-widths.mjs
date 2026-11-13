@@ -230,6 +230,14 @@ async function run() {
           `
         },
         {
+          name: 'Round Start Modal',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            const modal = document.getElementById('round-start-modal');
+            modal.classList.remove('hidden');
+          `
+        },
+        {
           name: 'Dating Phase - Match Picker View',
           setupJs: `
             document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
