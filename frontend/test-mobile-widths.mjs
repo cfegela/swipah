@@ -292,9 +292,31 @@ async function run() {
             document.getElementById('date-outcome-badge').textContent = '🌟 INCREDIBLE DATE (+1000 PTS)';
             document.getElementById('date-partner-avatar').innerHTML = '<img src="/profiles/chad-thunderclout.jpg" alt="Chad" />';
             document.getElementById('date-partner-name').textContent = 'Chad Thunderclout';
-            document.getElementById('date-partner-sub').textContent = '24 • Fitness Influencer & Day Trader • Miami, FL';
-            document.getElementById('date-story-content').innerHTML = '<p>You met up near South Beach. The banter clicked immediately and you spent 3 hours trading funny workout and crypto horror stories.</p><p>They paid the entire tab and walked you to your car.</p>';
+            document.getElementById('date-partner-sub').textContent = '24 • Fitness Influencer & Day Trader';
+            document.getElementById('date-story-content').innerHTML = '<p>You met up for evening drinks. The banter clicked immediately and you spent 3 hours trading funny workout and crypto horror stories.</p><p>They paid the entire tab and walked you to your car.</p>';
             document.getElementById('date-score-delta-val').textContent = '+1,000 pts';
+          `
+        },
+        {
+          name: 'Dating Phase - Date In Progress Interstitial View',
+          setupJs: `
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('profile-swipe-section').classList.add('hidden');
+            document.getElementById('waiting-round-overlay').classList.add('hidden');
+            document.getElementById('dating-phase-section').classList.remove('hidden');
+            document.getElementById('date-picker-card').classList.add('hidden');
+            document.getElementById('date-story-card').classList.add('hidden');
+            document.getElementById('date-zero-matches-card').classList.add('hidden');
+            document.getElementById('date-spectator-card').classList.add('hidden');
+            const inProgressCard = document.getElementById('date-in-progress-card');
+            inProgressCard.classList.remove('hidden');
+            document.getElementById('date-in-progress-avatar').innerHTML = '<img src="/profiles/chad-thunderclout.jpg" alt="Chad" />';
+            document.getElementById('date-in-progress-name').textContent = 'Chad Thunderclout';
+            document.getElementById('date-in-progress-sub').textContent = '24 • Fitness Influencer & Day Trader';
+            document.getElementById('date-in-progress-status').textContent = 'Ordering drinks & sizing each other up...';
           `
         },
         {

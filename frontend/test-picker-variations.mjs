@@ -241,6 +241,51 @@ async function run() {
     assert.strictEqual(res4.swipingBorder, res4.datingBorder, 'Both End Game buttons must have red outline border');
     console.log('   ✓ Both End Game buttons on swiping and dating pages share identical red outline styling');
 
+    // Test 5: Date In Progress Interstitial Elements & No Skip Button
+    console.log('\n5. Testing Date In Progress interstitial structure & requirements...');
+    const inProgressEval = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const card = document.getElementById('date-in-progress-card');
+          const badge = card ? card.querySelector('.date-badge-in-progress') : null;
+          const avatar = document.getElementById('date-in-progress-avatar');
+          const name = document.getElementById('date-in-progress-name');
+          const sub = document.getElementById('date-in-progress-sub');
+          const status = document.getElementById('date-in-progress-status');
+          const bar = document.getElementById('date-progress-bar-fill');
+          const timer = document.getElementById('date-in-progress-timer');
+          const buttons = card ? Array.from(card.querySelectorAll('button')) : [];
+          const skipBtn = buttons.find(b => b.textContent.toLowerCase().includes('skip'));
+
+          return {
+            hasCard: !!card,
+            hasBadge: !!badge,
+            badgeText: badge ? badge.textContent.trim() : '',
+            hasAvatar: !!avatar,
+            hasName: !!name,
+            hasSub: !!sub,
+            hasStatus: !!status,
+            hasBar: !!bar,
+            hasTimer: !!timer,
+            hasSkipButton: !!skipBtn,
+            totalButtonsInCard: buttons.length
+          };
+        })()
+      `,
+      returnByValue: true
+    });
+
+    const res5 = inProgressEval.result.value;
+    console.log('   Date In Progress interstitial check:', res5);
+    assert.strictEqual(res5.hasCard, true, 'date-in-progress-card must exist');
+    assert.strictEqual(res5.hasBadge, true, 'Badge must exist');
+    assert(res5.badgeText.includes('DATE IN PROGRESS'), 'Badge must say DATE IN PROGRESS');
+    assert.strictEqual(res5.hasBar, true, 'Progress bar fill element must exist');
+    assert.strictEqual(res5.hasTimer, true, 'Timer countdown element must exist');
+    assert.strictEqual(res5.hasSkipButton, false, 'There must NOT be a skip button');
+    assert.strictEqual(res5.totalButtonsInCard, 0, 'No buttons should exist on Date In Progress card');
+    console.log('   ✓ Date In Progress card correctly structured with progress bar, countdown, and NO skip button');
+
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');
   } finally {

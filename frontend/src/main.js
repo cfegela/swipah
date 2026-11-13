@@ -26,6 +26,10 @@ let chosenDateProfileId = null;
 let isResolvingDate = false;
 let lastSeenRound = 0;
 let isSubmittingLike = false;
+let dateInProgressTimerId = null;
+let dateInProgressIntervalId = null;
+let dateInProgressActive = false;
+let dateSuspenseCompleted = false;
 
 let unsubscribeRealtime = null;
 let currentSubscribedRoomId = null;
@@ -259,6 +263,15 @@ const datePickerCard = document.getElementById('date-picker-card');
 const datePickerGrid = document.getElementById('date-picker-grid');
 const datePickerSubheading = document.getElementById('date-picker-subheading');
 const datePickerMatchCount = document.getElementById('date-picker-match-count');
+
+const dateInProgressCard = document.getElementById('date-in-progress-card');
+const dateInProgressAvatar = document.getElementById('date-in-progress-avatar');
+const dateInProgressName = document.getElementById('date-in-progress-name');
+const dateInProgressSub = document.getElementById('date-in-progress-sub');
+const dateInProgressIcon = document.getElementById('date-in-progress-icon');
+const dateInProgressStatus = document.getElementById('date-in-progress-status');
+const dateProgressBarFill = document.getElementById('date-progress-bar-fill');
+const dateInProgressTimer = document.getElementById('date-in-progress-timer');
 
 const dateStoryCard = document.getElementById('date-story-card');
 const dateOutcomeBadge = document.getElementById('date-outcome-badge');
@@ -537,6 +550,8 @@ function startGamePolling(roomId) {
         lastSeenRound = state.room.current_round;
         currentProfileIdx = 0;
         chosenDateProfileId = null;
+      dateSuspenseCompleted = false;
+      clearDateInProgressTimer();
 
         updateHUD();
         await loadAndShowGameView();
@@ -903,6 +918,106 @@ function renderDatingChecklist(containerEl) {
     .join('');
 }
 
+// Date In Progress Interstitial Helpers
+function clearDateInProgressTimer() {
+  if (dateInProgressTimerId) {
+    clearTimeout(dateInProgressTimerId);
+    dateInProgressTimerId = null;
+  }
+  if (dateInProgressIntervalId) {
+    clearInterval(dateInProgressIntervalId);
+    dateInProgressIntervalId = null;
+  }
+  dateInProgressActive = false;
+}
+
+function startDateInProgress(profileId) {
+  clearDateInProgressTimer();
+
+  const selectedMatch = myMatches.find((m) => (m.profile_id || m.id) === profileId);
+  if (!selectedMatch) return;
+
+  chosenDateProfileId = profileId;
+  dateInProgressActive = true;
+
+  // Show only Date In Progress Card
+  datePickerCard.classList.add('hidden');
+  dateStoryCard.classList.add('hidden');
+  dateZeroMatchesCard.classList.add('hidden');
+  dateSpectatorCard.classList.add('hidden');
+  if (dateInProgressCard) {
+    dateInProgressCard.classList.remove('hidden');
+  }
+
+  const avatarHtml = selectedMatch.avatar_url
+    ? `<img src="${escapeHtml(selectedMatch.avatar_url)}" alt="${escapeHtml(selectedMatch.name)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />`
+    : (selectedMatch.avatar_svg || '');
+  if (dateInProgressAvatar) dateInProgressAvatar.innerHTML = avatarHtml;
+  if (dateInProgressName) dateInProgressName.textContent = selectedMatch.name;
+  if (dateInProgressSub) dateInProgressSub.textContent = `${selectedMatch.age} • ${selectedMatch.occupation || 'Mystery Job'}`;
+
+  // Reset and animate progress bar smoothly over 4000ms
+  if (dateProgressBarFill) {
+    dateProgressBarFill.style.transition = 'none';
+    dateProgressBarFill.style.width = '0%';
+    void dateProgressBarFill.offsetWidth;
+    dateProgressBarFill.style.transition = 'width 4000ms linear';
+    dateProgressBarFill.style.width = '100%';
+  }
+
+  const stages = [
+    { icon: '🥂', text: 'Ordering drinks & sizing each other up...' },
+    { icon: '🚩', text: 'Dodging conversational red flags...' },
+    { icon: '🕯️', text: 'Wondering if they\'re a psycho or the one...' },
+    { icon: '🧾', text: 'Waiting for the bill... did you survive?' },
+  ];
+
+  let currentStageIdx = 0;
+  if (dateInProgressIcon) dateInProgressIcon.textContent = stages[0].icon;
+  if (dateInProgressStatus) {
+    dateInProgressStatus.textContent = stages[0].text;
+    dateInProgressStatus.style.opacity = '1';
+  }
+  if (dateInProgressTimer) dateInProgressTimer.textContent = '4s remaining';
+
+  const startTime = Date.now();
+  const totalDuration = 4000;
+
+  dateInProgressIntervalId = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
+    if (dateInProgressTimer) {
+      dateInProgressTimer.textContent = `${remaining}s remaining`;
+    }
+
+    const nextStageIdx = Math.min(
+      Math.floor((elapsed / totalDuration) * stages.length),
+      stages.length - 1
+    );
+
+    if (nextStageIdx !== currentStageIdx) {
+      currentStageIdx = nextStageIdx;
+      if (dateInProgressIcon) dateInProgressIcon.textContent = stages[currentStageIdx].icon;
+      if (dateInProgressStatus) {
+        dateInProgressStatus.style.opacity = '0';
+        setTimeout(() => {
+          if (dateInProgressStatus) {
+            dateInProgressStatus.textContent = stages[currentStageIdx].text;
+            dateInProgressStatus.style.opacity = '1';
+          }
+        }, 150);
+      }
+    }
+  }, 100);
+
+  dateInProgressTimerId = setTimeout(() => {
+    clearDateInProgressTimer();
+    dateSuspenseCompleted = true;
+    playChime();
+    renderDatingPhase();
+  }, totalDuration);
+}
+
 // Render Dating Phase View
 function renderDatingPhase() {
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
@@ -910,16 +1025,25 @@ function renderDatingPhase() {
 
   // 1. Ghost / Murdered Spectator
   if (myPlayer.is_murdered) {
+    clearDateInProgressTimer();
     datePickerCard.classList.add('hidden');
+    if (dateInProgressCard) dateInProgressCard.classList.add('hidden');
     dateStoryCard.classList.add('hidden');
     dateZeroMatchesCard.classList.add('hidden');
     dateSpectatorCard.classList.remove('hidden');
     return;
   }
 
+  // 1.5 If Date In Progress suspense is currently running, keep it visible and do not interrupt
+  if (dateInProgressActive) {
+    return;
+  }
+
   // 2. Zero Matches Scenario
   if (!myMatches || myMatches.length === 0) {
+    clearDateInProgressTimer();
     datePickerCard.classList.add('hidden');
+    if (dateInProgressCard) dateInProgressCard.classList.add('hidden');
     dateStoryCard.classList.add('hidden');
     dateSpectatorCard.classList.add('hidden');
     dateZeroMatchesCard.classList.remove('hidden');
@@ -945,14 +1069,22 @@ function renderDatingPhase() {
     return;
   }
 
-  // 3. Match Selected: Show Date Story Recap
+  // 3. Match Selected: Show Date Story Recap or run Date In Progress suspense
   const selectedMatch = myMatches.find(
     (m) => (m.profile_id || m.id) === (chosenDateProfileId || myPlayer.selected_date_profile_id)
   );
 
   if (selectedMatch) {
     chosenDateProfileId = selectedMatch.profile_id || selectedMatch.id;
+
+    // If date has not been completed and suspense has not completed yet, run the 4-second waiting period!
+    if (!myPlayer.date_completed && !dateSuspenseCompleted) {
+      startDateInProgress(chosenDateProfileId);
+      return;
+    }
+
     datePickerCard.classList.add('hidden');
+    if (dateInProgressCard) dateInProgressCard.classList.add('hidden');
     dateZeroMatchesCard.classList.add('hidden');
     dateSpectatorCard.classList.add('hidden');
     dateStoryCard.classList.remove('hidden');
@@ -990,6 +1122,7 @@ function renderDatingPhase() {
   }
 
   // 4. One or More Matches and hasn't chosen yet: Show Picker Grid
+  if (dateInProgressCard) dateInProgressCard.classList.add('hidden');
   dateStoryCard.classList.add('hidden');
   dateZeroMatchesCard.classList.add('hidden');
   dateSpectatorCard.classList.add('hidden');
@@ -1061,6 +1194,8 @@ async function handleConfirmDateRead() {
 
     if (res.round_advanced) {
       chosenDateProfileId = null;
+      dateSuspenseCompleted = false;
+      clearDateInProgressTimer();
       await loadAndShowGameView();
     } else {
       renderDatingPhase();
@@ -1090,6 +1225,8 @@ async function handleConfirmZeroMatches() {
 
     if (res.round_advanced) {
       chosenDateProfileId = null;
+      dateSuspenseCompleted = false;
+      clearDateInProgressTimer();
       await loadAndShowGameView();
     } else {
       renderDatingPhase();
@@ -1489,6 +1626,8 @@ async function loadAndShowGameView() {
       lastSeenRound = currentRoom.current_round;
       currentProfileIdx = 0;
       chosenDateProfileId = null;
+      dateSuspenseCompleted = false;
+      clearDateInProgressTimer();
       if (!myPlayer?.is_murdered) {
         openRoundStartModal(currentRoom.current_round);
       }
