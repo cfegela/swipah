@@ -122,9 +122,9 @@ async function runRoundGameplayTest() {
   const sampleProfile = aliceState.profiles[0];
   assert(sampleProfile.name && sampleProfile.age, 'Profile has name and age');
   assert(sampleProfile.gender === 'man' || sampleProfile.gender === 'woman', 'Profile has gender (man/woman)');
-  assert(['high', 'medium', 'low'].includes(sampleProfile.attractiveness), 'Profile has hidden attractiveness category');
+  assert(sampleProfile.attractiveness === undefined, 'Attractiveness field must not be present');
   for (const prof of aliceState.profiles) {
-    assert(['high', 'medium', 'low'].includes(prof.attractiveness), `Profile ${prof.name} must have valid attractiveness category`);
+    assert(prof.attractiveness === undefined, `Profile ${prof.name} must not have attractiveness field`);
   }
   assert(sampleProfile.bio, 'Profile has bio');
   assert(sampleProfile.red_flags?.length > 0, 'Profile has red flags');
@@ -134,7 +134,7 @@ async function runRoundGameplayTest() {
     assert(prof.avatar_url && prof.avatar_url.endsWith('.jpg'), `Profile ${prof.name} must have valid avatar_url (.jpg)`);
   }
   assert(sampleProfile.avatar_svg?.includes('<svg'), 'Profile has embedded SVG avatar fallback');
-  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}, gender: ${sampleProfile.gender}, attractiveness: ${sampleProfile.attractiveness}, photo: ${sampleProfile.avatar_url}), ${sampleProfile.occupation}`);
+  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}, gender: ${sampleProfile.gender}, photo: ${sampleProfile.avatar_url}), ${sampleProfile.occupation}`);
 
   // 6. Check secret matches and gender targeting
   console.log('\n6. Checking secret matches and gender preference targeting for Round 1...');
