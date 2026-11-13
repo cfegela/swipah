@@ -1079,6 +1079,22 @@ input[type="text"]:focus {
   margin-bottom: 1.5rem;
 }
 
+#btn-end-active-game {
+  background: transparent !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  color: #fca5a5 !important;
+  box-shadow: none !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+#btn-end-active-game:not(:disabled):hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.75) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
 /* Match Modal Specifics */
 .match-modal-card {
   border-color: rgba(213, 75, 38, 0.5);
