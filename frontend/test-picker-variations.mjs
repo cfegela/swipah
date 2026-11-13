@@ -281,10 +281,10 @@ async function run() {
     assert.strictEqual(res5.hasBadge, true, 'Badge must exist');
     assert(res5.badgeText.includes('DATE IN PROGRESS'), 'Badge must say DATE IN PROGRESS');
     assert.strictEqual(res5.hasBar, true, 'Progress bar fill element must exist');
-    assert.strictEqual(res5.hasTimer, true, 'Timer countdown element must exist');
+    assert.strictEqual(res5.hasTimer, false, 'Timer countdown element must NOT exist');
     assert.strictEqual(res5.hasSkipButton, false, 'There must NOT be a skip button');
     assert.strictEqual(res5.totalButtonsInCard, 0, 'No buttons should exist on Date In Progress card');
-    console.log('   ✓ Date In Progress card correctly structured with progress bar, countdown, and NO skip button');
+    console.log('   ✓ Date In Progress card correctly structured with progress bar, NO countdown timer, and NO skip button');
 
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');

@@ -271,7 +271,6 @@ const dateInProgressSub = document.getElementById('date-in-progress-sub');
 const dateInProgressIcon = document.getElementById('date-in-progress-icon');
 const dateInProgressStatus = document.getElementById('date-in-progress-status');
 const dateProgressBarFill = document.getElementById('date-progress-bar-fill');
-const dateInProgressTimer = document.getElementById('date-in-progress-timer');
 
 const dateStoryCard = document.getElementById('date-story-card');
 const dateOutcomeBadge = document.getElementById('date-outcome-badge');
@@ -978,18 +977,12 @@ function startDateInProgress(profileId) {
     dateInProgressStatus.textContent = stages[0].text;
     dateInProgressStatus.style.opacity = '1';
   }
-  if (dateInProgressTimer) dateInProgressTimer.textContent = '10s remaining';
 
   const startTime = Date.now();
   const totalDuration = 10000;
 
   dateInProgressIntervalId = setInterval(() => {
     const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
-    if (dateInProgressTimer) {
-      dateInProgressTimer.textContent = `${remaining}s remaining`;
-    }
-
     const nextStageIdx = Math.min(
       Math.floor((elapsed / totalDuration) * stages.length),
       stages.length - 1

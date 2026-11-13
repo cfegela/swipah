@@ -1561,13 +1561,6 @@ input[type="text"]:focus {
   transition: width 10000ms linear;
 }
 
-.date-in-progress-countdown {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
 /* Date Story Card */
 .date-story-header {
   margin-bottom: 1rem;
