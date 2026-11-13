@@ -234,15 +234,8 @@
               <span class="hud-value hud-matches-value" id="hud-matches-count">0 🔥</span>
             </div>
           </div>
-          <div class="hud-actions-group">
-            <button id="btn-end-active-game" class="btn btn-danger btn-sm" style="display: none;">
-              End Game
-            </button>
-            <button id="btn-leave-active-game" class="btn btn-secondary btn-sm" style="display: none;">
-              Leave Game
-            </button>
-          </div>
         </div>
+        <button id="btn-leave-active-game" class="hidden" style="display: none;"></button>
 
         <!-- Waiting Card (shown when player used 3 likes and opponents are still swiping) -->
         <div id="waiting-round-overlay" class="card waiting-card hidden" style="text-align: center; margin-bottom: 1.25rem;">
@@ -281,6 +274,13 @@
           <!-- Pagination Indicator (e.g. 1 of 10) -->
           <div class="profile-counter-pill" id="profile-counter-pill">
             Profile <span id="current-profile-num">1</span> of <span id="total-profiles-num">10</span>
+          </div>
+
+          <!-- Host End Game Action (Below Profile Number Badge) -->
+          <div class="game-bottom-actions">
+            <button id="btn-end-active-game" class="btn btn-danger btn-sm" style="display: none;">
+              End Game
+            </button>
           </div>
         </div>
       </main>

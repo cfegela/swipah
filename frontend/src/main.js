@@ -677,9 +677,13 @@ function updateHUD() {
     const likesLeft = Math.max(0, 3 - myLikes.length);
     hudLikesRemaining.textContent = `${likesLeft}/3`;
   }
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
   if (hudMatchesCount) {
-    const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
     hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} 🔥`;
+  }
+  // Only host sees the End Game button
+  if (btnEndActiveGame) {
+    btnEndActiveGame.style.display = myPlayer?.is_host ? 'inline-flex' : 'none';
   }
 }
 
@@ -1028,12 +1032,11 @@ async function loadAndShowGameView() {
     const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
     const isHost = !!myPlayer?.is_host;
 
-    if (isHost) {
-      btnEndActiveGame.style.display = 'inline-flex';
+    if (btnEndActiveGame) {
+      btnEndActiveGame.style.display = isHost ? 'inline-flex' : 'none';
+    }
+    if (btnLeaveActiveGame) {
       btnLeaveActiveGame.style.display = 'none';
-    } else {
-      btnEndActiveGame.style.display = 'none';
-      btnLeaveActiveGame.style.display = 'inline-flex';
     }
 
     updateHUD();
