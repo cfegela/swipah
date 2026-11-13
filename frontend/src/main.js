@@ -983,7 +983,7 @@ function renderDatingPhase() {
       renderDatingChecklist(datingPlayersList);
     } else {
       btnConfirmDateRead.disabled = false;
-      btnConfirmDateRead.textContent = 'Next Round ➔';
+      btnConfirmDateRead.textContent = 'Continue';
       datingPlayersStatusBox.classList.add('hidden');
     }
     return;
@@ -1068,7 +1068,7 @@ async function handleConfirmDateRead() {
   } catch (err) {
     showAlert(err.message || 'Failed to confirm date completion.');
     btnConfirmDateRead.disabled = false;
-    btnConfirmDateRead.textContent = 'Next Round ➔';
+    btnConfirmDateRead.textContent = 'Continue';
   } finally {
     isResolvingDate = false;
   }
