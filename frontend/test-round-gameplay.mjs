@@ -311,6 +311,11 @@ async function runRoundGameplayTest() {
   assert(aliceDatingState.my_matches.length >= 1, 'Alice should have at least 1 match');
   console.log(`   ✓ Alice has ${aliceDatingState.my_matches.length} match(es) for dating.`);
 
+  const aliceAllMatches = aliceDatingState.profiles.filter(p => p.is_match);
+  const aliceMatchOutcomes = aliceAllMatches.map(m => m.date_outcome);
+  assert(new Set(aliceMatchOutcomes).size === aliceAllMatches.length, 'No 2 dates can have the same outcome in a round: ' + aliceMatchOutcomes.join(', '));
+  console.log(`   ✓ Alice secret matches have strictly distinct date outcomes: ${aliceMatchOutcomes.join(', ')}`);
+
   const aliceChosenMatch = aliceDatingState.my_matches[0];
   assert(['great', 'good', 'bad', 'murdered'].includes(aliceChosenMatch.date_outcome), 'Valid date outcome: ' + aliceChosenMatch.date_outcome);
   if (aliceChosenMatch.date_outcome === 'great') assert(aliceChosenMatch.date_points === 1000, 'Great date is 1000 pts');
