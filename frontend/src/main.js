@@ -769,26 +769,12 @@ function renderCurrentProfile() {
     btnLikeProfile.title = 'Like profile';
   }
 
-  const redFlagsHtml = (profile.red_flags || [])
-    .map(
-      (rf) => `
-      <div class="flag-item flag-red">
-        <span>🚩</span>
-        <span>${escapeHtml(rf)}</span>
-      </div>
-    `
-    )
+  const redFlagsListHtml = (profile.red_flags || [])
+    .map((rf) => `<li>${escapeHtml(rf)}</li>`)
     .join('');
 
-  const greenFlagsHtml = (profile.green_flags || [])
-    .map(
-      (gf) => `
-      <div class="flag-item flag-green">
-        <span>🟢</span>
-        <span>${escapeHtml(gf)}</span>
-      </div>
-    `
-    )
+  const greenFlagsListHtml = (profile.green_flags || [])
+    .map((gf) => `<li>${escapeHtml(gf)}</li>`)
     .join('');
 
   const stampHtml = isLiked
@@ -808,29 +794,34 @@ function renderCurrentProfile() {
         </div>
       </div>
       <div class="profile-content">
-        <div class="profile-meta-tags">
-          <span class="meta-tag">💼 ${escapeHtml(profile.occupation)}</span>
-          <span class="meta-tag">📍 ${escapeHtml(profile.location)}</span>
+        <div class="profile-field-row">
+          <span class="profile-field-label">Occupation:</span>
+          <span class="profile-field-value">${escapeHtml(profile.occupation)}</span>
         </div>
-        <div class="profile-bio">
-          ${escapeHtml(profile.bio)}
+        <div class="profile-field-row">
+          <span class="profile-field-label">Location:</span>
+          <span class="profile-field-value">${escapeHtml(profile.location)}</span>
+        </div>
+        <div class="profile-field-section">
+          <div class="profile-field-label">Description:</div>
+          <div class="profile-bio">${escapeHtml(profile.bio)}</div>
         </div>
         ${
-          redFlagsHtml
+          redFlagsListHtml
             ? `
-          <div class="flags-section">
-            <div class="flags-title">Red Flags</div>
-            <div class="flags-list">${redFlagsHtml}</div>
+          <div class="profile-field-section">
+            <div class="profile-field-label">Red Flags:</div>
+            <ul class="profile-bullet-list flags-bullet-red">${redFlagsListHtml}</ul>
           </div>
         `
             : ''
         }
         ${
-          greenFlagsHtml
+          greenFlagsListHtml
             ? `
-          <div class="flags-section">
-            <div class="flags-title">Green Flags</div>
-            <div class="flags-list">${greenFlagsHtml}</div>
+          <div class="profile-field-section">
+            <div class="profile-field-label">Green Flags:</div>
+            <ul class="profile-bullet-list flags-bullet-green">${greenFlagsListHtml}</ul>
           </div>
         `
             : ''
