@@ -279,9 +279,6 @@ const zeroMatchesPlayersStatusBox = document.getElementById('zero-matches-player
 const zeroMatchesPlayersList = document.getElementById('zero-matches-players-list');
 
 const dateSpectatorCard = document.getElementById('date-spectator-card');
-const btnConfirmSpectatorReady = document.getElementById('btn-confirm-spectator-ready');
-const spectatorPlayersStatusBox = document.getElementById('spectator-players-status-box');
-const spectatorPlayersList = document.getElementById('spectator-players-list');
 const btnEndActiveGameDating = document.getElementById('btn-end-active-game-dating');
 
 // Alerts
@@ -916,17 +913,6 @@ function renderDatingPhase() {
     dateStoryCard.classList.add('hidden');
     dateZeroMatchesCard.classList.add('hidden');
     dateSpectatorCard.classList.remove('hidden');
-
-    spectatorPlayersStatusBox.classList.remove('hidden');
-    renderDatingChecklist(spectatorPlayersList);
-
-    if (myPlayer.date_completed) {
-      btnConfirmSpectatorReady.disabled = true;
-      btnConfirmSpectatorReady.textContent = '✓ Ready (Waiting for living players...)';
-    } else {
-      btnConfirmSpectatorReady.disabled = false;
-      btnConfirmSpectatorReady.textContent = 'Ready for Next Round ➔';
-    }
     return;
   }
 
@@ -1106,34 +1092,6 @@ async function handleConfirmZeroMatches() {
     showAlert(err.message || 'Failed to confirm readiness.');
     btnConfirmZeroMatches.disabled = false;
     btnConfirmZeroMatches.textContent = 'Ready for Next Round ➔';
-  } finally {
-    isResolvingDate = false;
-  }
-}
-
-async function handleConfirmSpectatorReady() {
-  if (isResolvingDate || !currentRoom) return;
-  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
-  if (!myPlayer || myPlayer.date_completed) return;
-
-  isResolvingDate = true;
-  btnConfirmSpectatorReady.disabled = true;
-  btnConfirmSpectatorReady.textContent = 'Submitting...';
-
-  try {
-    const res = await resolvePlayerDate(currentRoom.id, null);
-    myPlayer.date_completed = true;
-
-    if (res.round_advanced) {
-      chosenDateProfileId = null;
-      await loadAndShowGameView();
-    } else {
-      renderDatingPhase();
-    }
-  } catch (err) {
-    showAlert(err.message || 'Failed to confirm spectator readiness.');
-    btnConfirmSpectatorReady.disabled = false;
-    btnConfirmSpectatorReady.textContent = 'Ready for Next Round ➔';
   } finally {
     isResolvingDate = false;
   }
@@ -1735,10 +1693,6 @@ if (btnConfirmDateRead) {
 
 if (btnConfirmZeroMatches) {
   btnConfirmZeroMatches.addEventListener('click', handleConfirmZeroMatches);
-}
-
-if (btnConfirmSpectatorReady) {
-  btnConfirmSpectatorReady.addEventListener('click', handleConfirmSpectatorReady);
 }
 
 btnLeaveActiveGame.addEventListener('click', async () => {
