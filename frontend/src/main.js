@@ -1109,7 +1109,7 @@ function formatTestOutcome(profile) {
   if (outcome === 'great') return 'Great (+1000 pts)';
   if (outcome === 'good') return 'Good (+500 pts)';
   if (outcome === 'bad') return 'Bad (-500 pts)';
-  if (outcome === 'murdered') return 'Murdered (💀 0 pts)';
+  if (outcome === 'murdered') return 'Murdered (0 pts)';
   return outcome ? outcome.toUpperCase() : 'N/A';
 }
 

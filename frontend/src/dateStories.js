@@ -62,9 +62,9 @@ export function getDateStory(profile, outcome) {
 
     case 'murdered':
       title = `A Fatal Encounter with ${name}...`;
-      badgeText = '💀 YOU WERE MURDERED! (KNOCKED OUT)';
+      badgeText = 'YOU WERE MURDERED! (KNOCKED OUT)';
       badgeClass = 'date-badge-murdered';
-      scoreDeltaText = '💀 Eliminated (0 pts)';
+      scoreDeltaText = 'Eliminated (0 pts)';
       paragraphs = [
         `Everything started innocently enough over evening drinks with ${name} in ${location}. They seemed fascinating—after all, how often do you meet a ${occupation}? But as the night wore on, the red flags morphed into flashing crimson sirens.`,
         `"Hey, my apartment is actually a bit noisy," ${name.split(' ')[0]} whispered, flashing a strained smile. "Why don't we head to my secondary location? It's completely soundproof and deep in the woods." Against every true-crime podcast lesson you've ever heard, you actually got into their car.`,
