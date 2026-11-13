@@ -416,7 +416,7 @@ function openMatchModal(profile) {
     : (profile.avatar_svg || '');
   matchProfileAvatar.innerHTML = avatarHtml;
   matchProfileName.textContent = `Matched with ${profile.name}!`;
-  matchProfileDesc.textContent = `You and ${profile.name} liked each other! 🔥`;
+  matchProfileDesc.textContent = `You and ${profile.name} liked each other! ❤️`;
 
   matchModal.classList.remove('hidden');
 }
@@ -786,7 +786,7 @@ function updateHUD() {
   }
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
   if (hudMatchesCount) {
-    hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} 🔥`;
+    hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} ❤️`;
   }
   if (hudScoreCount) {
     if (myPlayer?.is_murdered) {
