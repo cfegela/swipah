@@ -118,8 +118,8 @@ async function run() {
           const count = 1;
           const countText = count === 1 ? '1 profile' : count + ' profiles';
           const instructionText = count === 1
-            ? 'Choose your date below to see how it went:'
-            : 'Choose who you want to go on a date with this round:';
+            ? 'Pick your date below to see how it went:'
+            : 'Pick who you want to go on a date with this round:';
 
           const sub = document.getElementById('date-picker-subheading');
           sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
@@ -129,9 +129,12 @@ async function run() {
           pickerCard.classList.remove('hidden');
           storyCard.classList.add('hidden');
 
+          const heading = pickerCard.querySelector('.dating-heading');
+
           return {
             pickerHidden: pickerCard.classList.contains('hidden'),
             storyHidden: storyCard.classList.contains('hidden'),
+            headingText: heading ? heading.textContent.trim() : '',
             subheadingText: sub.textContent.trim(),
             matchCountText: document.getElementById('date-picker-match-count').textContent.trim()
           };
@@ -144,9 +147,10 @@ async function run() {
     console.log('   Result with 1 match:', res1);
     assert.strictEqual(res1.pickerHidden, false, 'Picker card must NOT be hidden when there is 1 match');
     assert.strictEqual(res1.storyHidden, true, 'Story card must be hidden before date is chosen');
+    assert.strictEqual(res1.headingText, 'Pick Your Date', 'Heading should be "Pick Your Date"');
     assert.strictEqual(res1.matchCountText, '1 profile');
-    assert(res1.subheadingText.includes('You matched with 1 profile! Choose your date below to see how it went:'));
-    console.log('   ✓ Single match shows picker card with singular "1 profile" and instruction: "Choose your date below to see how it went:"');
+    assert(res1.subheadingText.includes('You matched with 1 profile! Pick your date below to see how it went:'));
+    console.log('   ✓ Single match shows picker card with singular "1 profile" and instruction: "Pick your date below to see how it went:"');
 
     // Test 2: Multiple Matches (e.g. 2 profiles)
     console.log('\n2. Testing Dating Phase with 2 matches...');
@@ -156,8 +160,8 @@ async function run() {
           const count = 2;
           const countText = count === 1 ? '1 profile' : count + ' profiles';
           const instructionText = count === 1
-            ? 'Choose your date below to see how it went:'
-            : 'Choose who you want to go on a date with this round:';
+            ? 'Pick your date below to see how it went:'
+            : 'Pick who you want to go on a date with this round:';
 
           const sub = document.getElementById('date-picker-subheading');
           sub.innerHTML = 'You matched with <strong id="date-picker-match-count" style="color: var(--accent);">' + countText + '</strong>! ' + instructionText;
@@ -174,8 +178,8 @@ async function run() {
     const res2 = multiMatchEval.result.value;
     console.log('   Result with 2 matches:', res2);
     assert.strictEqual(res2.matchCountText, '2 profiles');
-    assert(res2.subheadingText.includes('You matched with 2 profiles! Choose who you want to go on a date with this round:'));
-    console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction: "Choose who you want to go on a date with this round:"');
+    assert(res2.subheadingText.includes('You matched with 2 profiles! Pick who you want to go on a date with this round:'));
+    console.log('   ✓ Multiple matches shows picker card with plural "2 profiles" and instruction: "Pick who you want to go on a date with this round:"');
 
     ws.close();
     console.log('\n🎉 ALL DATE PICKER VARIATION TESTS PASSED!');

@@ -997,8 +997,8 @@ function renderDatingPhase() {
 
   const countText = myMatches.length === 1 ? '1 profile' : `${myMatches.length} profiles`;
   const instructionText = myMatches.length === 1
-    ? 'Choose your date below to see how it went:'
-    : 'Choose who you want to go on a date with this round:';
+    ? 'Pick your date below to see how it went:'
+    : 'Pick who you want to go on a date with this round:';
 
   if (datePickerSubheading) {
     datePickerSubheading.innerHTML = `You matched with <strong id="date-picker-match-count" style="color: var(--accent);">${escapeHtml(countText)}</strong>! ${escapeHtml(instructionText)}`;
