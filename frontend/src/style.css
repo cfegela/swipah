@@ -837,7 +837,7 @@ input[type="text"]:focus {
 .profile-hero {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 280px;
   background: #080a26;
   flex-shrink: 0;
   display: flex;
@@ -847,10 +847,13 @@ input[type="text"]:focus {
   border-bottom: 1px solid var(--border-color);
 }
 
-.profile-hero svg {
+.profile-hero svg,
+.profile-hero img,
+.profile-hero-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 20%;
   display: block;
 }
 
@@ -1132,9 +1135,12 @@ input[type="text"]:focus {
   z-index: 2;
 }
 
-.match-avatar-profile svg {
+.match-avatar-profile svg,
+.match-avatar-profile img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 @keyframes fadeIn {

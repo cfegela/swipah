@@ -129,8 +129,12 @@ async function runRoundGameplayTest() {
   assert(sampleProfile.bio, 'Profile has bio');
   assert(sampleProfile.red_flags?.length > 0, 'Profile has red flags');
   assert(sampleProfile.green_flags?.length > 0, 'Profile has green flags');
-  assert(sampleProfile.avatar_svg?.includes('<svg'), 'Profile has embedded SVG avatar');
-  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}, gender: ${sampleProfile.gender}, attractiveness: ${sampleProfile.attractiveness}), ${sampleProfile.occupation}`);
+  assert(sampleProfile.avatar_url && sampleProfile.avatar_url.startsWith('/profiles/'), 'Profile has avatar_url');
+  for (const prof of aliceState.profiles) {
+    assert(prof.avatar_url && prof.avatar_url.endsWith('.jpg'), `Profile ${prof.name} must have valid avatar_url (.jpg)`);
+  }
+  assert(sampleProfile.avatar_svg?.includes('<svg'), 'Profile has embedded SVG avatar fallback');
+  console.log(`   ✓ Profile sample validated: "${sampleProfile.name}" (${sampleProfile.age}, gender: ${sampleProfile.gender}, attractiveness: ${sampleProfile.attractiveness}, photo: ${sampleProfile.avatar_url}), ${sampleProfile.occupation}`);
 
   // 6. Check secret matches and gender targeting
   console.log('\n6. Checking secret matches and gender preference targeting for Round 1...');

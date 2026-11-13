@@ -370,7 +370,10 @@ function openMatchModal(profile) {
   const playerInitial = (myPlayer?.display_name || 'Y').charAt(0).toUpperCase();
 
   matchPlayerAvatar.textContent = playerInitial;
-  matchProfileAvatar.innerHTML = profile.avatar_svg || '';
+  const avatarHtml = profile.avatar_url
+    ? `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(profile.name)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />`
+    : (profile.avatar_svg || '');
+  matchProfileAvatar.innerHTML = avatarHtml;
   matchProfileName.textContent = `Matched with ${profile.name}!`;
   matchProfileDesc.textContent = `You and ${profile.name} liked each other! 🔥`;
 
@@ -786,11 +789,15 @@ function renderCurrentProfile() {
     ? `<div class="liked-stamp">${likeInfo.is_match ? "IT'S A MATCH! 🔥" : 'LIKED ❤️'}</div>`
     : '';
 
+  const avatarHtml = profile.avatar_url
+    ? `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(profile.name)}" class="profile-hero-photo" />`
+    : (profile.avatar_svg || '');
+
   profileCardWrapper.innerHTML = `
     <div class="dating-profile-card" id="active-profile-card">
       ${stampHtml}
       <div class="profile-hero">
-        ${profile.avatar_svg || ''}
+        ${avatarHtml}
         <div class="profile-hero-gradient"></div>
         <div class="profile-header-overlay">
           <span class="profile-name">${escapeHtml(profile.name)}</span>
