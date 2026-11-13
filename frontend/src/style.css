@@ -1558,7 +1558,7 @@ input[type="text"]:focus {
   width: 0%;
   background: var(--swipah-gradient);
   border-radius: 999px;
-  transition: width 8000ms linear;
+  transition: width 10000ms linear;
 }
 
 .date-in-progress-countdown {

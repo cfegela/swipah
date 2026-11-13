@@ -956,12 +956,12 @@ function startDateInProgress(profileId) {
   if (dateInProgressName) dateInProgressName.textContent = selectedMatch.name;
   if (dateInProgressSub) dateInProgressSub.textContent = `${selectedMatch.age} • ${selectedMatch.occupation || 'Mystery Job'}`;
 
-  // Reset and animate progress bar smoothly over 8000ms
+  // Reset and animate progress bar smoothly over 10000ms
   if (dateProgressBarFill) {
     dateProgressBarFill.style.transition = 'none';
     dateProgressBarFill.style.width = '0%';
     void dateProgressBarFill.offsetWidth;
-    dateProgressBarFill.style.transition = 'width 8000ms linear';
+    dateProgressBarFill.style.transition = 'width 10000ms linear';
     dateProgressBarFill.style.width = '100%';
   }
 
@@ -978,10 +978,10 @@ function startDateInProgress(profileId) {
     dateInProgressStatus.textContent = stages[0].text;
     dateInProgressStatus.style.opacity = '1';
   }
-  if (dateInProgressTimer) dateInProgressTimer.textContent = '8s remaining';
+  if (dateInProgressTimer) dateInProgressTimer.textContent = '10s remaining';
 
   const startTime = Date.now();
-  const totalDuration = 8000;
+  const totalDuration = 10000;
 
   dateInProgressIntervalId = setInterval(() => {
     const elapsed = Date.now() - startTime;
