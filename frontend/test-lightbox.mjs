@@ -280,6 +280,9 @@ async function run() {
             d.classList.contains('active')
           );
 
+        const prevDotArrow = document.querySelector('#lightbox-dots .lightbox-dot-arrow[data-lightbox-step="-1"]');
+        const nextDotArrow = document.querySelector('#lightbox-dots .lightbox-dot-arrow[data-lightbox-step="1"]');
+
         const initial = {
           open: !modal.classList.contains('hidden'),
           hasCounter: !!document.getElementById('lightbox-counter'),
@@ -287,7 +290,27 @@ async function run() {
           src: img.getAttribute('src'),
           hasPrevArrow: !!document.getElementById('btn-lightbox-prev'),
           hasNextArrow: !!document.getElementById('btn-lightbox-next'),
+          hasDotPrevArrow: !!prevDotArrow,
+          hasDotNextArrow: !!nextDotArrow,
+          prevDisabledAtStart: !!prevDotArrow?.disabled,
+          nextDisabledAtStart: !!nextDotArrow?.disabled,
           dotsCount: document.querySelectorAll('#lightbox-dots .lightbox-dot').length
+        };
+
+        // Click small next arrow beside dots -> photo 2
+        nextDotArrow.click();
+        const afterNextArrowClick = {
+          stillOpen: !modal.classList.contains('hidden'),
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
+        };
+
+        // Click small prev arrow beside dots -> back to photo 1
+        document.querySelector('#lightbox-dots .lightbox-dot-arrow[data-lightbox-step="-1"]').click();
+        const afterPrevArrowClick = {
+          stillOpen: !modal.classList.contains('hidden'),
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
         };
 
         // Swipe left inside lightbox -> should go to photo 2 and NOT close modal even if click fires
@@ -325,7 +348,7 @@ async function run() {
           src: img.getAttribute('src')
         };
 
-        return { initial, afterSwipeLeft1, afterSwipeLeft2, afterArrowLeft, afterDotClick };
+        return { initial, afterNextArrowClick, afterPrevArrowClick, afterSwipeLeft1, afterSwipeLeft2, afterArrowLeft, afterDotClick };
       })()`,
       returnByValue: true
     });
@@ -338,6 +361,14 @@ async function run() {
       multiVal.initial.dotsCount !== 3 ||
       multiVal.initial.hasPrevArrow ||
       multiVal.initial.hasNextArrow ||
+      !multiVal.initial.hasDotPrevArrow ||
+      !multiVal.initial.hasDotNextArrow ||
+      !multiVal.initial.prevDisabledAtStart ||
+      multiVal.initial.nextDisabledAtStart ||
+      !multiVal.afterNextArrowClick.stillOpen ||
+      multiVal.afterNextArrowClick.activeDot !== 1 ||
+      !multiVal.afterPrevArrowClick.stillOpen ||
+      multiVal.afterPrevArrowClick.activeDot !== 0 ||
       !multiVal.afterSwipeLeft1.stillOpen ||
       multiVal.afterSwipeLeft1.activeDot !== 1 ||
       !multiVal.afterSwipeLeft1.src.includes('luna-starweaver-2.jpg') ||

@@ -565,7 +565,7 @@ function renderLightboxPhoto(direction = 0, dragOffsetPx = 0, outgoingUrl = '') 
   if (lightboxDots) {
     lightboxDots.classList.toggle('hidden', !showMulti);
     if (showMulti) {
-      lightboxDots.innerHTML = lightboxPhotos
+      const dotsHtml = lightboxPhotos
         .map(
           (_, idx) => `
           <button
@@ -577,6 +577,34 @@ function renderLightboxPhoto(direction = 0, dragOffsetPx = 0, outgoingUrl = '') 
           ></button>`
         )
         .join('');
+
+      lightboxDots.innerHTML = `
+        <button
+          type="button"
+          class="lightbox-dot-arrow"
+          data-lightbox-step="-1"
+          aria-label="Previous photo"
+          title="Previous photo"
+          ${lightboxPhotoIndex === 0 ? 'disabled' : ''}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        ${dotsHtml}
+        <button
+          type="button"
+          class="lightbox-dot-arrow"
+          data-lightbox-step="1"
+          aria-label="Next photo"
+          title="Next photo"
+          ${lightboxPhotoIndex === total - 1 ? 'disabled' : ''}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      `;
     } else {
       lightboxDots.innerHTML = '';
     }
@@ -2146,6 +2174,11 @@ if (btnCloseLightbox) {
 if (lightboxDots) {
   lightboxDots.addEventListener('click', (e) => {
     e.stopPropagation();
+    const stepBtn = e.target.closest('.lightbox-dot-arrow');
+    if (stepBtn && !stepBtn.disabled && stepBtn.dataset.lightboxStep !== undefined) {
+      stepLightboxPhoto(Number(stepBtn.dataset.lightboxStep));
+      return;
+    }
     const dotBtn = e.target.closest('.lightbox-dot');
     if (dotBtn && dotBtn.dataset.photoIdx !== undefined) {
       setLightboxPhoto(Number(dotBtn.dataset.photoIdx));
