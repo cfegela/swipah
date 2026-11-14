@@ -222,6 +222,12 @@ const photoLightboxModal = document.getElementById('photo-lightbox-modal');
 const btnCloseLightbox = document.getElementById('btn-close-lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 const lightboxSvg = document.getElementById('lightbox-svg');
+const lightboxDots = document.getElementById('lightbox-dots');
+
+let lightboxPhotos = [];
+let lightboxPhotoIndex = 0;
+let lightboxProfileName = '';
+let lightboxSuppressClick = false;
 
 // DOM Elements: Alerts
 const alertBox = document.getElementById('alert-box');
@@ -450,21 +456,86 @@ function closeMatchModal() {
   }
 }
 
+function getProfilePhotos(profile) {
+  if (!profile) return [];
+  const candidates = [];
+  if (profile.avatar_url) candidates.push(profile.avatar_url);
+  if (Array.isArray(profile.extra_photos)) {
+    for (const url of profile.extra_photos) {
+      if (url && !candidates.includes(url)) {
+        candidates.push(url);
+      }
+    }
+  }
+  return candidates;
+}
+
+function renderLightboxPhoto() {
+  const total = lightboxPhotos.length;
+  if (total === 0) return;
+
+  const currentUrl = lightboxPhotos[lightboxPhotoIndex];
+  lightboxImg.src = currentUrl;
+  lightboxImg.alt = lightboxProfileName
+    ? `${lightboxProfileName}'s photo ${lightboxPhotoIndex + 1} of ${total}`
+    : `Profile photo ${lightboxPhotoIndex + 1} of ${total}`;
+  lightboxImg.style.display = 'block';
+  lightboxImg.style.transform = '';
+  lightboxSvg.style.display = 'none';
+  lightboxSvg.innerHTML = '';
+
+  const showMulti = total > 1;
+  if (lightboxDots) {
+    lightboxDots.classList.toggle('hidden', !showMulti);
+    if (showMulti) {
+      lightboxDots.innerHTML = lightboxPhotos
+        .map(
+          (_, idx) => `
+          <button
+            type="button"
+            class="lightbox-dot ${idx === lightboxPhotoIndex ? 'active' : ''}"
+            data-photo-idx="${idx}"
+            aria-label="View photo ${idx + 1} of ${total}"
+            aria-selected="${idx === lightboxPhotoIndex ? 'true' : 'false'}"
+          ></button>`
+        )
+        .join('');
+    } else {
+      lightboxDots.innerHTML = '';
+    }
+  }
+}
+
+function setLightboxPhoto(idx) {
+  if (idx < 0 || idx >= lightboxPhotos.length || idx === lightboxPhotoIndex) return;
+  lightboxPhotoIndex = idx;
+  renderLightboxPhoto();
+}
+
+function stepLightboxPhoto(delta) {
+  setLightboxPhoto(lightboxPhotoIndex + delta);
+}
+
 // Photo Lightbox Modal
-function openPhotoLightbox(profile) {
+function openPhotoLightbox(profile, startIdx = 0) {
   if (!profile || !photoLightboxModal) return;
 
-  if (profile.avatar_url) {
-    lightboxImg.src = profile.avatar_url;
-    lightboxImg.alt = profile.name ? `${profile.name}'s photo` : 'Full profile photo';
-    lightboxImg.style.display = 'block';
-    lightboxSvg.style.display = 'none';
-    lightboxSvg.innerHTML = '';
+  lightboxPhotos = getProfilePhotos(profile);
+  lightboxProfileName = profile.name || '';
+
+  if (lightboxPhotos.length > 0) {
+    lightboxPhotoIndex = Math.max(0, Math.min(startIdx, lightboxPhotos.length - 1));
+    renderLightboxPhoto();
   } else if (profile.avatar_svg) {
+    lightboxPhotos = [];
     lightboxImg.src = '';
     lightboxImg.style.display = 'none';
     lightboxSvg.style.display = 'flex';
     lightboxSvg.innerHTML = profile.avatar_svg;
+    if (lightboxDots) {
+      lightboxDots.classList.add('hidden');
+      lightboxDots.innerHTML = '';
+    }
   } else {
     return;
   }
@@ -477,8 +548,16 @@ function closePhotoLightbox() {
   if (photoLightboxModal && !photoLightboxModal.classList.contains('hidden')) {
     photoLightboxModal.classList.add('hidden');
     document.body.style.overflow = '';
-    if (lightboxImg) lightboxImg.src = '';
+    lightboxPhotos = [];
+    lightboxPhotoIndex = 0;
+    lightboxProfileName = '';
+    lightboxSuppressClick = false;
+    if (lightboxImg) {
+      lightboxImg.src = '';
+      lightboxImg.style.transform = '';
+    }
     if (lightboxSvg) lightboxSvg.innerHTML = '';
+    if (lightboxDots) lightboxDots.innerHTML = '';
   }
 }
 
@@ -1282,14 +1361,25 @@ function renderCurrentProfile() {
     .map((gf) => `<li>${escapeHtml(gf)}</li>`)
     .join('');
 
+  const photos = getProfilePhotos(profile);
   const avatarHtml = profile.avatar_url
     ? `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(profile.name)}" class="profile-hero-photo" />`
     : (profile.avatar_svg || '');
+  const heroPhotoPillHtml =
+    photos.length > 1
+      ? `<div class="profile-hero-photo-pill" aria-label="${photos.length} photos available">
+          <span class="profile-hero-photo-dots">${photos
+            .map((_, idx) => `<span class="profile-hero-photo-dot ${idx === 0 ? 'active' : ''}"></span>`)
+            .join('')}</span>
+          <span>1/${photos.length}</span>
+        </div>`
+      : '';
 
   profileCardWrapper.innerHTML = `
     <div class="dating-profile-card" id="active-profile-card">
-      <div class="profile-hero" title="Tap to view full image" role="button" aria-label="Tap to view full image">
+      <div class="profile-hero" data-photos="${escapeHtml(JSON.stringify(photos))}" title="Tap to view photos" role="button" aria-label="Tap to view photos">
         ${avatarHtml}
+        ${heroPhotoPillHtml}
         <button
           type="button"
           id="btn-hero-like-profile"
@@ -1518,8 +1608,21 @@ function initSwipeGestures() {
       const svgEl = hero.querySelector('svg');
       const nameEl = hero.querySelector('.profile-name');
       const name = nameEl ? nameEl.textContent.trim() : '';
+      let domPhotos = [];
+      if (hero.dataset.photos) {
+        try {
+          const parsed = JSON.parse(hero.dataset.photos);
+          if (Array.isArray(parsed)) domPhotos = parsed.filter(Boolean);
+        } catch (err) {}
+      }
 
-      if (photoEl && photoEl.src) {
+      if (domPhotos.length > 0) {
+        openPhotoLightbox({
+          name,
+          avatar_url: domPhotos[0],
+          extra_photos: domPhotos.slice(1)
+        });
+      } else if (photoEl && photoEl.src) {
         openPhotoLightbox({
           name,
           avatar_url: photoEl.getAttribute('src') || photoEl.src
@@ -1846,15 +1949,106 @@ if (btnCloseLightbox) {
   });
 }
 
+if (lightboxDots) {
+  lightboxDots.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dotBtn = e.target.closest('.lightbox-dot');
+    if (dotBtn && dotBtn.dataset.photoIdx !== undefined) {
+      setLightboxPhoto(Number(dotBtn.dataset.photoIdx));
+    }
+  });
+}
+
 if (photoLightboxModal) {
-  photoLightboxModal.addEventListener('click', () => {
+  let lbStartX = 0;
+  let lbStartY = 0;
+  let lbDragging = false;
+  let lbDragged = false;
+
+  const startLightboxDrag = (clientX, clientY, target) => {
+    if (lightboxPhotos.length <= 1) return;
+    if (target && target.closest('button')) return;
+    lbStartX = clientX;
+    lbStartY = clientY;
+    lbDragging = true;
+    lbDragged = false;
+    if (lightboxImg) lightboxImg.style.transition = 'none';
+  };
+
+  const moveLightboxDrag = (clientX, clientY) => {
+    if (!lbDragging) return;
+    const diffX = clientX - lbStartX;
+    const diffY = clientY - lbStartY;
+    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+      lbDragged = true;
+      if (lightboxImg) {
+        lightboxImg.style.transform = `translateX(${diffX * 0.45}px)`;
+      }
+    }
+  };
+
+  const endLightboxDrag = (clientX) => {
+    if (!lbDragging) return;
+    lbDragging = false;
+    const diffX = clientX - lbStartX;
+    if (lightboxImg) {
+      lightboxImg.style.transition = 'transform 0.16s ease-out';
+      lightboxImg.style.transform = '';
+    }
+    if (lbDragged) {
+      lightboxSuppressClick = true;
+      setTimeout(() => {
+        lightboxSuppressClick = false;
+      }, 60);
+    }
+    if (Math.abs(diffX) >= 40 && lbDragged) {
+      if (diffX < 0 && lightboxPhotoIndex < lightboxPhotos.length - 1) {
+        stepLightboxPhoto(1);
+      } else if (diffX > 0 && lightboxPhotoIndex > 0) {
+        stepLightboxPhoto(-1);
+      }
+    }
+  };
+
+  photoLightboxModal.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    startLightboxDrag(e.clientX, e.clientY, e.target);
+  });
+
+  photoLightboxModal.addEventListener('pointermove', (e) => {
+    moveLightboxDrag(e.clientX, e.clientY);
+  });
+
+  photoLightboxModal.addEventListener('pointerup', (e) => {
+    endLightboxDrag(e.clientX);
+  });
+
+  photoLightboxModal.addEventListener('pointercancel', () => {
+    lbDragging = false;
+    if (lightboxImg) {
+      lightboxImg.style.transition = 'transform 0.16s ease-out';
+      lightboxImg.style.transform = '';
+    }
+  });
+
+  photoLightboxModal.addEventListener('click', (e) => {
+    if (lightboxSuppressClick) {
+      lightboxSuppressClick = false;
+      return;
+    }
+    if (e.target.closest('button')) return;
     closePhotoLightbox();
   });
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && photoLightboxModal && !photoLightboxModal.classList.contains('hidden')) {
+  if (!photoLightboxModal || photoLightboxModal.classList.contains('hidden')) return;
+  if (e.key === 'Escape') {
     closePhotoLightbox();
+  } else if (e.key === 'ArrowLeft') {
+    stepLightboxPhoto(-1);
+  } else if (e.key === 'ArrowRight') {
+    stepLightboxPhoto(1);
   }
 });
 

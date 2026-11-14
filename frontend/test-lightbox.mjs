@@ -249,6 +249,107 @@ async function run() {
       throw new Error('Swipe gesture incorrectly triggered photo lightbox');
     }
 
+    // Test multi-photo lightbox swiping, buttons, dots, and keyboard navigation
+    const multiPhotoRes = await send('Runtime.evaluate', {
+      expression: `(() => {
+        const wrapper = document.getElementById('profile-card-wrapper');
+        wrapper.innerHTML = \`
+          <div class="dating-profile-card" id="active-profile-card">
+            <div class="profile-hero" id="test-hero-multi" data-photos='["/profiles/luna-starweaver.jpg","/profiles/luna-starweaver-2.jpg","/profiles/luna-starweaver-3.jpg"]'>
+              <img src="/profiles/luna-starweaver.jpg" alt="Luna Starweaver" class="profile-hero-photo" />
+              <div class="profile-hero-gradient"></div>
+              <div class="profile-header-overlay">
+                <span class="profile-name">Luna Starweaver</span>
+                <span class="profile-age">22</span>
+              </div>
+            </div>
+          </div>
+        \`;
+
+        // Clear any leftover drag flag cleanly by tapping down/up without moving first
+        wrapper.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, button: 0 }));
+        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: 100, clientY: 100 }));
+
+        const hero = document.getElementById('test-hero-multi');
+        hero.click();
+
+        const modal = document.getElementById('photo-lightbox-modal');
+        const img = document.getElementById('lightbox-img');
+        const getActiveDotIdx = () =>
+          Array.from(document.querySelectorAll('#lightbox-dots .lightbox-dot')).findIndex((d) =>
+            d.classList.contains('active')
+          );
+
+        const initial = {
+          open: !modal.classList.contains('hidden'),
+          hasCounter: !!document.getElementById('lightbox-counter'),
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src'),
+          hasPrevArrow: !!document.getElementById('btn-lightbox-prev'),
+          hasNextArrow: !!document.getElementById('btn-lightbox-next'),
+          dotsCount: document.querySelectorAll('#lightbox-dots .lightbox-dot').length
+        };
+
+        // Swipe left inside lightbox -> should go to photo 2 and NOT close modal even if click fires
+        modal.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 250, clientY: 300, button: 0 }));
+        modal.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 140, clientY: 300 }));
+        modal.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: 140, clientY: 300 }));
+        modal.click();
+
+        const afterSwipeLeft1 = {
+          stillOpen: !modal.classList.contains('hidden'),
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
+        };
+
+        // Swipe left again -> photo 3
+        modal.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 250, clientY: 300, button: 0 }));
+        modal.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 140, clientY: 300 }));
+        modal.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: 140, clientY: 300 }));
+        const afterSwipeLeft2 = {
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
+        };
+
+        // Keyboard ArrowLeft -> back to photo 2
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+        const afterArrowLeft = {
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
+        };
+
+        // Dot 0 click -> back to photo 1
+        document.querySelectorAll('#lightbox-dots .lightbox-dot')[0].click();
+        const afterDotClick = {
+          activeDot: getActiveDotIdx(),
+          src: img.getAttribute('src')
+        };
+
+        return { initial, afterSwipeLeft1, afterSwipeLeft2, afterArrowLeft, afterDotClick };
+      })()`,
+      returnByValue: true
+    });
+    const multiVal = multiPhotoRes.result.value;
+    console.log('7. Multi-photo lightbox swipe/controls:', JSON.stringify(multiVal));
+    if (
+      !multiVal.initial.open ||
+      multiVal.initial.hasCounter ||
+      multiVal.initial.activeDot !== 0 ||
+      multiVal.initial.dotsCount !== 3 ||
+      multiVal.initial.hasPrevArrow ||
+      multiVal.initial.hasNextArrow ||
+      !multiVal.afterSwipeLeft1.stillOpen ||
+      multiVal.afterSwipeLeft1.activeDot !== 1 ||
+      !multiVal.afterSwipeLeft1.src.includes('luna-starweaver-2.jpg') ||
+      multiVal.afterSwipeLeft2.activeDot !== 2 ||
+      !multiVal.afterSwipeLeft2.src.includes('luna-starweaver-3.jpg') ||
+      multiVal.afterArrowLeft.activeDot !== 1 ||
+      multiVal.afterDotClick.activeDot !== 0 ||
+      !multiVal.afterDotClick.src.includes('luna-starweaver.jpg')
+    ) {
+      throw new Error('Multi-photo lightbox test failed: ' + JSON.stringify(multiVal));
+    }
+
     console.log('\n✨ ALL LIGHTBOX INTERACTION TESTS PASSED!');
     ws.close();
   } finally {
