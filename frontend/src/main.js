@@ -258,6 +258,7 @@ const btnLeaveActiveGame = document.getElementById('btn-leave-active-game');
 
 // DOM Elements: Profile Swipe Deck & Waiting Area
 const waitingRoundOverlay = document.getElementById('waiting-round-overlay');
+const waitingRoundSubtitle = document.getElementById('waiting-round-subtitle');
 const waitingPlayersList = document.getElementById('waiting-players-list');
 const profileSwipeSection = document.getElementById('profile-swipe-section');
 const profileCardWrapper = document.getElementById('profile-card-wrapper');
@@ -303,6 +304,19 @@ const zeroMatchesPlayersList = document.getElementById('zero-matches-players-lis
 
 const dateSpectatorCard = document.getElementById('date-spectator-card');
 const btnEndActiveGameDating = document.getElementById('btn-end-active-game-dating');
+
+// DOM Elements: Game Completed Section
+const gameCompletedSection = document.getElementById('game-completed-section');
+const completedStandingsList = document.getElementById('completed-standings-list');
+const btnCompletedHome = document.getElementById('btn-completed-home');
+
+function getRequiredLikes(player = null) {
+  if (typeof player?.likes_required === 'number') {
+    return player.likes_required;
+  }
+  const deckLen = currentRoundProfiles ? currentRoundProfiles.length : 0;
+  return Math.min(3, deckLen);
+}
 
 // Alerts
 function showAlert(message, type = 'error') {
@@ -450,12 +464,11 @@ function closeMatchModal() {
     loadAndShowGameView();
     return;
   }
-  if (myLikes.length >= 3) {
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const reqLikes = getRequiredLikes(myPlayer);
+  if (myPlayer?.round_completed || myLikes.length >= reqLikes) {
     showWaitingOverlay();
   } else {
-    if (currentProfileIdx < currentRoundProfiles.length - 1) {
-      currentProfileIdx++;
-    }
     renderCurrentProfile();
   }
 }
@@ -704,6 +717,14 @@ function startGamePolling(roomId) {
         return;
       }
 
+      if (state.room.status === 'completed') {
+        stopPolling();
+        currentRoom = state.room;
+        currentPlayers = state.players || currentPlayers;
+        await loadAndShowGameView();
+        return;
+      }
+
       // Check if round advanced
       if (state.room.current_round > currentRoom.current_round) {
         currentRoom = state.room;
@@ -739,9 +760,10 @@ function startGamePolling(roomId) {
         currentPlayers = state.players;
         myMatches = state.my_matches || myMatches;
         updateHUD();
+        const myP = currentPlayers.find((p) => p.user_id === currentUser?.id);
         if (currentRoom.round_phase === 'dating') {
           renderDatingPhase();
-        } else if (myLikes.length >= 3) {
+        } else if (myP?.round_completed || myLikes.length >= getRequiredLikes(myP)) {
           renderWaitingPlayersList();
         }
       }
@@ -773,13 +795,16 @@ function setupRealtimeSubscription(roomId) {
             currentPlayers = state.players;
             myMatches = state.my_matches || myMatches;
             updateHUD();
-            if (state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
+            if (state.room.status === 'completed' || state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
               currentRoom = state.room;
               loadAndShowGameView();
-            } else if (currentRoom.round_phase === 'dating') {
-              renderDatingPhase();
-            } else if (myLikes.length >= 3) {
-              renderWaitingPlayersList();
+            } else {
+              const myP = currentPlayers.find((p) => p.user_id === currentUser?.id);
+              if (currentRoom.round_phase === 'dating') {
+                renderDatingPhase();
+              } else if (myP?.round_completed || myLikes.length >= getRequiredLikes(myP)) {
+                renderWaitingPlayersList();
+              }
             }
           }
         } else {
@@ -808,6 +833,11 @@ function setupRealtimeSubscription(roomId) {
           playChime();
           loadAndShowGameView();
         }
+      } else if (updatedRoom.status === 'completed') {
+        stopPolling();
+        currentRoom = updatedRoom;
+        playChime();
+        loadAndShowGameView();
       } else if (updatedRoom.status === 'abandoned') {
         stopPolling();
         showAlert('The host closed this room.', 'error');
@@ -823,13 +853,16 @@ function setupRealtimeSubscription(roomId) {
             currentPlayers = state.players || currentPlayers;
             myMatches = state.my_matches || myMatches;
             updateHUD();
-            if (state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
+            if (state.room.status === 'completed' || state.room.current_round > currentRoom.current_round || state.room.round_phase !== currentRoom.round_phase) {
               currentRoom = state.room;
               loadAndShowGameView();
-            } else if (currentRoom.round_phase === 'dating') {
-              renderDatingPhase();
-            } else if (myLikes.length >= 3) {
-              renderWaitingPlayersList();
+            } else {
+              const myP = currentPlayers.find((p) => p.user_id === currentUser?.id);
+              if (currentRoom.round_phase === 'dating') {
+                renderDatingPhase();
+              } else if (myP?.round_completed || myLikes.length >= getRequiredLikes(myP)) {
+                renderWaitingPlayersList();
+              }
             }
           }
         } catch (_) {}
@@ -949,6 +982,7 @@ function showLandingView() {
   document.getElementById('app').classList.remove('in-lobby', 'in-game');
   lobbyView.classList.add('hidden');
   gameView.classList.add('hidden');
+  if (gameCompletedSection) gameCompletedSection.classList.add('hidden');
   landingView.classList.remove('hidden');
 
   hostCard.classList.remove('hidden');
@@ -957,14 +991,16 @@ function showLandingView() {
 
 // Update Game HUD
 function updateHUD() {
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const reqLikes = getRequiredLikes(myPlayer);
+
   if (hudRoundNumber) {
     hudRoundNumber.textContent = currentRoom?.current_round || 1;
   }
   if (hudLikesRemaining) {
-    const likesLeft = Math.max(0, 3 - myLikes.length);
-    hudLikesRemaining.textContent = `${likesLeft}/3`;
+    const likesLeft = Math.max(0, reqLikes - myLikes.length);
+    hudLikesRemaining.textContent = `${likesLeft}/${reqLikes}`;
   }
-  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
   if (hudMatchesCount) {
     hudMatchesCount.textContent = `${myPlayer ? myPlayer.matches_count : 0} ❤️`;
   }
@@ -992,6 +1028,14 @@ function updateHUD() {
 function showWaitingOverlay() {
   profileSwipeSection.classList.add('hidden');
   waitingRoundOverlay.classList.remove('hidden');
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const reqLikes = getRequiredLikes(myPlayer);
+  if (waitingRoundSubtitle) {
+    waitingRoundSubtitle.textContent =
+      reqLikes === 0
+        ? "You've dated every eligible profile in this game! Waiting for remaining players..."
+        : `You used all ${reqLikes} like${reqLikes === 1 ? '' : 's'} for this round. Waiting for other players to finish swiping...`;
+  }
   renderWaitingPlayersList();
 }
 
@@ -1001,8 +1045,16 @@ function renderWaitingPlayersList() {
   waitingPlayersList.innerHTML = currentPlayers
     .map((p) => {
       const isMe = p.user_id === currentUser?.id;
-      const isDone = p.round_completed || (p.likes_count >= 3);
+      const reqLikes = p.likes_required ?? 3;
+      const isDone = p.round_completed || (p.likes_count >= reqLikes);
       const initial = (p.display_name || '?').charAt(0).toUpperCase();
+      const statusHtml = p.is_murdered
+        ? '<span style="color: #ef4444; font-weight: 700; font-size: 0.85rem;">Murdered 💀</span>'
+        : reqLikes === 0
+          ? '<span style="color: #4ade80; font-weight: 700; font-size: 0.85rem;">Dated Everyone 🏆</span>'
+          : isDone
+            ? `<span style="color: #4ade80; font-weight: 700; font-size: 0.85rem;">Ready (${p.likes_count || 0}/${reqLikes}) ✅</span>`
+            : `<span style="color: #ff916b; font-size: 0.85rem;">Swiping... (${p.likes_count || 0}/${reqLikes}) ⏳</span>`;
 
       return `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
@@ -1017,11 +1069,7 @@ function renderWaitingPlayersList() {
             </div>
           </div>
           <div>
-            ${
-              isDone
-                ? '<span style="color: #4ade80; font-weight: 700; font-size: 0.85rem;">Ready (3/3) ✅</span>'
-                : `<span style="color: #ff916b; font-size: 0.85rem;">Swiping... (${p.likes_count || 0}/3) ⏳</span>`
-            }
+            ${statusHtml}
           </div>
         </div>
       `;
@@ -1197,7 +1245,7 @@ function renderDatingPhase() {
     return;
   }
 
-  // 2. Zero Matches Scenario
+  // 2. Zero Matches (or Catalog Exhausted for this player)
   if (!myMatches || myMatches.length === 0) {
     clearDateInProgressTimer();
     datePickerCard.classList.add('hidden');
@@ -1206,13 +1254,21 @@ function renderDatingPhase() {
     dateSpectatorCard.classList.add('hidden');
     dateZeroMatchesCard.classList.remove('hidden');
 
-    const msg = getConciliatoryMessage(currentRoom?.current_round || 1);
-    zeroMatchesIcon.textContent = msg.icon;
-    zeroMatchesHeadline.textContent = msg.headline;
-    zeroMatchesBody.innerHTML = `
-      <p>${escapeHtml(msg.body)}</p>
-      <p>💡 ${escapeHtml(msg.advice)}</p>
-    `;
+    if (currentRoundProfiles.length === 0) {
+      zeroMatchesIcon.textContent = '💘 🏆 ✨';
+      zeroMatchesHeadline.textContent = 'You Dated Everyone!';
+      zeroMatchesBody.innerHTML = `
+        <p>You've gone on a date with every eligible profile in this game. Hang tight while the remaining players finish their dates!</p>
+      `;
+    } else {
+      const msg = getConciliatoryMessage(currentRoom?.current_round || 1);
+      zeroMatchesIcon.textContent = msg.icon;
+      zeroMatchesHeadline.textContent = msg.headline;
+      zeroMatchesBody.innerHTML = `
+        <p>${escapeHtml(msg.body)}</p>
+        <p>💡 ${escapeHtml(msg.advice)}</p>
+      `;
+    }
 
     if (myPlayer.date_completed) {
       btnConfirmZeroMatches.disabled = true;
@@ -1554,13 +1610,15 @@ function renderCurrentProfile() {
 function syncLikeButtons(isLiked) {
   const heroLikeBtn = document.getElementById('btn-hero-like-profile');
   const buttons = [btnLikeProfile, heroLikeBtn].filter(Boolean);
+  const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const reqLikes = getRequiredLikes(myPlayer);
 
   for (const btn of buttons) {
     if (isLiked) {
       btn.classList.add('btn-liked');
       btn.disabled = true;
       btn.title = 'Already liked';
-    } else if (myLikes.length >= 3) {
+    } else if (myLikes.length >= reqLikes) {
       btn.classList.remove('btn-liked');
       btn.disabled = true;
       btn.title = 'No likes remaining this round';
@@ -1732,8 +1790,10 @@ async function handleLikeProfile() {
     return;
   }
 
-  if (myLikes.length >= 3) {
-    showAlert('You have already used all 3 likes for this round.', 'info');
+  const myPlayerForLimit = currentPlayers.find((p) => p.user_id === currentUser?.id);
+  const reqLikes = getRequiredLikes(myPlayerForLimit);
+  if (myLikes.length >= reqLikes) {
+    showAlert(`You have already used all ${reqLikes} likes for this round.`, 'info');
     return;
   }
 
@@ -1756,6 +1816,7 @@ async function handleLikeProfile() {
     const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
     if (myPlayer) {
       myPlayer.likes_count = res.likes_count;
+      myPlayer.likes_required = res.likes_required ?? myPlayer.likes_required;
       myPlayer.matches_count = res.matches_count;
       myPlayer.round_completed = res.round_completed;
     }
@@ -1780,16 +1841,9 @@ async function handleLikeProfile() {
         showWaitingOverlay();
       }
     } else {
-      // Likes remaining
+      // Likes remaining — keep current profile displayed in liked state
       if (!res.is_match) {
         renderCurrentProfile();
-        // Auto-advance to next profile after 280ms
-        if (currentProfileIdx < currentRoundProfiles.length - 1) {
-          setTimeout(() => {
-            currentProfileIdx++;
-            renderCurrentProfile();
-          }, 280);
-        }
       }
     }
   } catch (err) {
@@ -1802,6 +1856,42 @@ async function handleLikeProfile() {
       : false;
     syncLikeButtons(activeIsLiked);
   }
+}
+
+function renderGameCompleted() {
+  if (!gameCompletedSection || !completedStandingsList) return;
+  gameCompletedSection.classList.remove('hidden');
+
+  const sortedPlayers = [...currentPlayers].sort((a, b) => {
+    if (a.is_murdered !== b.is_murdered) return a.is_murdered ? 1 : -1;
+    return (b.score ?? 0) - (a.score ?? 0);
+  });
+
+  completedStandingsList.innerHTML = sortedPlayers
+    .map((p, idx) => {
+      const isMe = p.user_id === currentUser?.id;
+      const isWinner = idx === 0 && !p.is_murdered;
+      const rowClass = p.is_murdered ? 'murdered' : isWinner ? 'winner' : 'ready';
+      const rankBadge = p.is_murdered ? '💀' : isWinner ? '👑' : `#${idx + 1}`;
+      const scoreText = p.is_murdered ? 'Murdered' : `${p.score ?? 0} pts`;
+      const datesText = typeof p.dated_count === 'number' ? ` • ${p.dated_count} date${p.dated_count === 1 ? '' : 's'}` : '';
+
+      return `
+        <div class="dating-player-row ${rowClass}">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="font-size: 1.1rem; min-width: 1.5rem; text-align: center;">${rankBadge}</span>
+            <div>
+              <strong style="color: ${p.is_murdered ? '#ef4444' : '#fff'};">${escapeHtml(p.display_name)} ${isMe ? '(You)' : ''}</strong>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Player ${p.seat_number}${escapeHtml(datesText)}</div>
+            </div>
+          </div>
+          <span style="font-size: 0.9rem; font-weight: 700; color: ${p.is_murdered ? '#fca5a5' : isWinner ? '#facc15' : '#4ade80'};">
+            ${escapeHtml(scoreText)}
+          </span>
+        </div>
+      `;
+    })
+    .join('');
 }
 
 // Switch to Active Game View
@@ -1828,16 +1918,29 @@ async function loadAndShowGameView() {
     const isHost = !!myPlayer?.is_host;
 
     if (btnEndActiveGame) {
-      btnEndActiveGame.style.display = isHost ? 'inline-flex' : 'none';
+      btnEndActiveGame.style.display = isHost && currentRoom.status === 'in_progress' ? 'inline-flex' : 'none';
     }
     if (btnEndActiveGameDating) {
-      btnEndActiveGameDating.style.display = isHost ? 'inline-flex' : 'none';
+      btnEndActiveGameDating.style.display = isHost && currentRoom.status === 'in_progress' ? 'inline-flex' : 'none';
     }
     if (btnLeaveActiveGame) {
       btnLeaveActiveGame.style.display = 'none';
     }
 
     updateHUD();
+
+    if (currentRoom.status === 'completed') {
+      stopPolling();
+      clearDateInProgressTimer();
+      closeRoundStartModal();
+      profileSwipeSection.classList.add('hidden');
+      waitingRoundOverlay.classList.add('hidden');
+      datingPhaseSection.classList.add('hidden');
+      renderGameCompleted();
+      return;
+    }
+
+    if (gameCompletedSection) gameCompletedSection.classList.add('hidden');
 
     // Check if new round
     if (currentRoom.current_round !== lastSeenRound) {
@@ -1846,7 +1949,7 @@ async function loadAndShowGameView() {
       chosenDateProfileId = null;
       dateSuspenseCompleted = false;
       clearDateInProgressTimer();
-      if (!myPlayer?.is_murdered) {
+      if (!myPlayer?.is_murdered && currentRoundProfiles.length > 0) {
         openRoundStartModal(currentRoom.current_round);
       }
       playChime();
@@ -1859,12 +1962,13 @@ async function loadAndShowGameView() {
       renderDatingPhase();
     } else {
       datingPhaseSection.classList.add('hidden');
+      const reqLikes = getRequiredLikes(myPlayer);
       if (myPlayer?.is_murdered) {
         profileSwipeSection.classList.add('hidden');
         waitingRoundOverlay.classList.add('hidden');
         datingPhaseSection.classList.remove('hidden');
         renderDatingPhase();
-      } else if (myLikes.length >= 3) {
+      } else if (currentRoundProfiles.length === 0 || myPlayer?.round_completed || myLikes.length >= reqLikes) {
         showWaitingOverlay();
       } else {
         waitingRoundOverlay.classList.add('hidden');
@@ -2201,6 +2305,10 @@ if (btnConfirmZeroMatches) {
   btnConfirmZeroMatches.addEventListener('click', handleConfirmZeroMatches);
 }
 
+if (btnCompletedHome) {
+  btnCompletedHome.addEventListener('click', showLandingView);
+}
+
 btnLeaveActiveGame.addEventListener('click', async () => {
   if (!currentRoom) return;
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
@@ -2243,7 +2351,7 @@ async function init() {
         showLandingView();
         return;
       }
-      if (room.status === 'in_progress') {
+      if (room.status === 'in_progress' || room.status === 'completed') {
         const myPlayer = players.find((p) => p.user_id === currentUser?.id);
         if (myPlayer) {
           currentRoom = room;

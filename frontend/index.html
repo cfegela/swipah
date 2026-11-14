@@ -262,11 +262,11 @@
         </div>
         <button id="btn-leave-active-game" class="hidden" style="display: none;"></button>
 
-        <!-- Waiting Card (shown when player used 3 likes and opponents are still swiping) -->
+        <!-- Waiting Card (shown when player used all likes and opponents are still swiping) -->
         <div id="waiting-round-overlay" class="card waiting-card hidden" style="text-align: center; margin-bottom: 1.25rem;">
           <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">⏳</div>
           <h3 style="font-size: 1.35rem; margin-bottom: 0.35rem;">You're All Swiped Out!</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
+          <p id="waiting-round-subtitle" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
             You used all 3 likes for this round. Waiting for other players to finish swiping...
           </p>
           <div id="waiting-players-list" style="display: flex; flex-direction: column; gap: 0.5rem; text-align: left; background: rgba(0, 0, 34, 0.6); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color);">
@@ -427,6 +427,28 @@
             <button id="btn-end-active-game-dating" class="btn btn-danger btn-danger-outline btn-sm" style="display: none;">
               End Game
             </button>
+          </div>
+        </div>
+
+        <!-- Game Completed Section (Shown when all eligible undated profiles are exhausted) -->
+        <div id="game-completed-section" class="dating-phase-section hidden">
+          <div class="card dating-card">
+            <div class="zero-matches-hero">
+              <div class="zero-matches-icon">🏆 💘 ✨</div>
+              <h2 class="zero-matches-headline">All Eligible Profiles Dated!</h2>
+            </div>
+            <div class="date-story-box" style="text-align: center;">
+              <p>You've gone on a date with every eligible profile in Swipah for this game. Here are the final standings!</p>
+            </div>
+            <div class="dating-players-status-box" style="margin-top: 0; margin-bottom: 1rem;">
+              <div class="dating-status-title">Final Standings</div>
+              <div id="completed-standings-list" class="dating-players-list"></div>
+            </div>
+            <div class="dating-actions">
+              <button id="btn-completed-home" class="btn btn-primary date-btn-action">
+                Back to Home
+              </button>
+            </div>
           </div>
         </div>
       </main>

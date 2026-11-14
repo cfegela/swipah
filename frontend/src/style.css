@@ -1915,6 +1915,11 @@ input[type="text"]:focus {
   opacity: 0.75;
 }
 
+.dating-player-row.winner {
+  border-left: 3px solid #facc15;
+  background: rgba(250, 204, 21, 0.08);
+}
+
 /* Zero Matches / Spectator Hero */
 .zero-matches-hero {
   text-align: center;
