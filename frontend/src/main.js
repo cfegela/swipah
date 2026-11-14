@@ -1274,21 +1274,6 @@ function renderCurrentProfile() {
   btnPrevProfile.disabled = currentProfileIdx === 0;
   btnNextProfile.disabled = currentProfileIdx === currentRoundProfiles.length - 1;
 
-  // Like button
-  if (isLiked) {
-    btnLikeProfile.classList.add('btn-liked');
-    btnLikeProfile.disabled = true;
-    btnLikeProfile.title = 'Already liked';
-  } else if (myLikes.length >= 3) {
-    btnLikeProfile.classList.remove('btn-liked');
-    btnLikeProfile.disabled = true;
-    btnLikeProfile.title = 'No likes remaining this round';
-  } else {
-    btnLikeProfile.classList.remove('btn-liked');
-    btnLikeProfile.disabled = false;
-    btnLikeProfile.title = 'Like profile';
-  }
-
   const redFlagsListHtml = (profile.red_flags || [])
     .map((rf) => `<li>${escapeHtml(rf)}</li>`)
     .join('');
@@ -1305,6 +1290,17 @@ function renderCurrentProfile() {
     <div class="dating-profile-card" id="active-profile-card">
       <div class="profile-hero" title="Tap to view full image" role="button" aria-label="Tap to view full image">
         ${avatarHtml}
+        <button
+          type="button"
+          id="btn-hero-like-profile"
+          class="btn-circle btn-heart profile-hero-like-btn"
+          title="Like profile"
+          aria-label="Like profile"
+        >
+          <svg class="heart-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
         <div class="profile-hero-gradient"></div>
         <div class="profile-header-overlay">
           <span class="profile-name">${escapeHtml(profile.name)}</span>
@@ -1373,6 +1369,32 @@ function renderCurrentProfile() {
       </div>
     </div>
   `;
+
+  syncLikeButtons(isLiked);
+}
+
+/**
+ * Keeps the bottom and hero-overlay heart buttons in sync for the active profile.
+ */
+function syncLikeButtons(isLiked) {
+  const heroLikeBtn = document.getElementById('btn-hero-like-profile');
+  const buttons = [btnLikeProfile, heroLikeBtn].filter(Boolean);
+
+  for (const btn of buttons) {
+    if (isLiked) {
+      btn.classList.add('btn-liked');
+      btn.disabled = true;
+      btn.title = 'Already liked';
+    } else if (myLikes.length >= 3) {
+      btn.classList.remove('btn-liked');
+      btn.disabled = true;
+      btn.title = 'No likes remaining this round';
+    } else {
+      btn.classList.remove('btn-liked');
+      btn.disabled = isSubmittingLike;
+      btn.title = 'Like profile';
+    }
+  }
 }
 
 // Horizontal Finger / Touch Drag Swiping Gestures
@@ -1386,6 +1408,7 @@ function initSwipeGestures() {
   if (!profileCardWrapper) return;
 
   profileCardWrapper.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.profile-hero-like-btn')) return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     touchStartX = e.clientX;
     touchStartY = e.clientY;
@@ -1469,8 +1492,15 @@ function initSwipeGestures() {
   window.addEventListener('pointerup', handlePointerEnd);
   window.addEventListener('pointercancel', handlePointerEnd);
 
-  // Tap on profile hero area to open full-screen photo lightbox
+  // Tap on hero-overlay heart button likes profile; tap elsewhere on hero opens lightbox
   profileCardWrapper.addEventListener('click', (e) => {
+    const heroLikeBtn = e.target.closest('.profile-hero-like-btn');
+    if (heroLikeBtn) {
+      e.stopPropagation();
+      handleLikeProfile();
+      return;
+    }
+
     const hero = e.target.closest('.profile-hero');
     if (!hero) return;
     if (hasSwipedOrMoved) return;
@@ -1520,7 +1550,9 @@ async function handleLikeProfile() {
   }
 
   isSubmittingLike = true;
+  const heroLikeBtn = document.getElementById('btn-hero-like-profile');
   btnLikeProfile.disabled = true;
+  if (heroLikeBtn) heroLikeBtn.disabled = true;
 
   try {
     const res = await submitLike(currentRoom.id, profile.id);
@@ -1576,6 +1608,11 @@ async function handleLikeProfile() {
     showAlert(err.message || 'Failed to submit like.');
   } finally {
     isSubmittingLike = false;
+    const activeProfile = currentRoundProfiles[currentProfileIdx];
+    const activeIsLiked = activeProfile
+      ? myLikes.some((l) => l.profile_id === activeProfile.id)
+      : false;
+    syncLikeButtons(activeIsLiked);
   }
 }
 

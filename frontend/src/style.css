@@ -87,6 +87,10 @@ header {
   align-items: center;
 }
 
+#app:not(.in-lobby):not(.in-game) header {
+  padding-top: 1.5rem;
+}
+
 .logo-wrapper {
   display: flex;
   justify-content: center;
@@ -871,7 +875,7 @@ input[type="text"]:focus {
 .profile-hero {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 350px;
   background: #080a26;
   flex-shrink: 0;
   display: flex;
@@ -884,8 +888,8 @@ input[type="text"]:focus {
   -webkit-user-select: none;
 }
 
-.profile-hero svg,
-.profile-hero img,
+.profile-hero > svg,
+.profile-hero > img,
 .profile-hero-photo {
   width: 100%;
   height: 100%;
@@ -1123,6 +1127,12 @@ input[type="text"]:focus {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.btn-heart .heart-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
 .btn-heart:not(:disabled):hover {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.6);
@@ -1139,6 +1149,24 @@ input[type="text"]:focus {
   border-color: rgba(34, 197, 94, 0.4) !important;
   color: #22c55e !important;
   box-shadow: none !important;
+}
+
+.profile-hero-like-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  background: rgba(9, 13, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.profile-hero-like-btn:not(:disabled):hover {
+  background: rgba(45, 16, 28, 0.78);
+}
+
+.profile-hero-like-btn.btn-liked {
+  background: rgba(9, 32, 22, 0.78) !important;
 }
 
 /* Counter Pill */
