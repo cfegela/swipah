@@ -1082,7 +1082,10 @@ input[type="text"]:focus {
   transform: scale(0.95);
 }
 
-.btn-heart.btn-liked {
+.btn-heart.btn-liked,
+.btn-heart.btn-liked:disabled {
+  opacity: 1;
+  cursor: default;
   background: rgba(239, 68, 68, 0.18) !important;
   border-color: rgba(239, 68, 68, 0.6) !important;
   color: #ef4444 !important;
