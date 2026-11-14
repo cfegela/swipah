@@ -220,7 +220,11 @@ const btnCloseMatchModal = document.getElementById('btn-close-match-modal');
 // DOM Elements: Photo Lightbox Modal
 const photoLightboxModal = document.getElementById('photo-lightbox-modal');
 const btnCloseLightbox = document.getElementById('btn-close-lightbox');
+const lightboxViewport = document.getElementById('lightbox-viewport');
+const lightboxTrack = document.getElementById('lightbox-track');
+const lightboxImgPrev = document.getElementById('lightbox-img-prev');
 const lightboxImg = document.getElementById('lightbox-img');
+const lightboxImgNext = document.getElementById('lightbox-img-next');
 const lightboxSvg = document.getElementById('lightbox-svg');
 const lightboxDots = document.getElementById('lightbox-dots');
 
@@ -470,19 +474,78 @@ function getProfilePhotos(profile) {
   return candidates;
 }
 
-function renderLightboxPhoto() {
+let lightboxSlideResetTimer = null;
+
+function syncLightboxNeighbors() {
+  const prevUrl = lightboxPhotoIndex > 0 ? lightboxPhotos[lightboxPhotoIndex - 1] : '';
+  const nextUrl =
+    lightboxPhotoIndex < lightboxPhotos.length - 1 ? lightboxPhotos[lightboxPhotoIndex + 1] : '';
+
+  if (lightboxImgPrev) {
+    lightboxImgPrev.src = prevUrl || '';
+    lightboxImgPrev.style.visibility = prevUrl ? 'visible' : 'hidden';
+  }
+  if (lightboxImgNext) {
+    lightboxImgNext.src = nextUrl || '';
+    lightboxImgNext.style.visibility = nextUrl ? 'visible' : 'hidden';
+  }
+}
+
+function settleLightboxTrackIdle() {
+  if (!lightboxTrack) return;
+  lightboxTrack.classList.remove('is-sliding');
+  lightboxTrack.style.transition = 'none';
+  lightboxTrack.style.transform = 'translate3d(0, 0, 0)';
+  syncLightboxNeighbors();
+}
+
+function renderLightboxPhoto(direction = 0, dragOffsetPx = 0, outgoingUrl = '') {
   const total = lightboxPhotos.length;
   if (total === 0) return;
 
+  if (lightboxSlideResetTimer) {
+    clearTimeout(lightboxSlideResetTimer);
+    lightboxSlideResetTimer = null;
+  }
+
   const currentUrl = lightboxPhotos[lightboxPhotoIndex];
+  if (lightboxViewport) lightboxViewport.style.display = 'flex';
   lightboxImg.src = currentUrl;
   lightboxImg.alt = lightboxProfileName
     ? `${lightboxProfileName}'s photo ${lightboxPhotoIndex + 1} of ${total}`
     : `Profile photo ${lightboxPhotoIndex + 1} of ${total}`;
   lightboxImg.style.display = 'block';
-  lightboxImg.style.transform = '';
   lightboxSvg.style.display = 'none';
   lightboxSvg.innerHTML = '';
+
+  syncLightboxNeighbors();
+
+  if (lightboxTrack) {
+    if (direction !== 0 && total > 1) {
+      if (direction > 0 && lightboxImgPrev && outgoingUrl) {
+        lightboxImgPrev.src = outgoingUrl;
+        lightboxImgPrev.style.visibility = 'visible';
+      } else if (direction < 0 && lightboxImgNext && outgoingUrl) {
+        lightboxImgNext.src = outgoingUrl;
+        lightboxImgNext.style.visibility = 'visible';
+      }
+
+      const startPct = direction > 0 ? '0%' : '-200%';
+      lightboxTrack.classList.add('is-sliding');
+      lightboxTrack.style.transition = 'none';
+      lightboxTrack.style.transform = `translate3d(calc(${startPct} + ${dragOffsetPx}px), 0, 0)`;
+      void lightboxTrack.offsetWidth;
+      lightboxTrack.style.transition = 'transform 0.26s cubic-bezier(0.22, 1, 0.36, 1)';
+      lightboxTrack.style.transform = 'translate3d(-100%, 0, 0)';
+
+      lightboxSlideResetTimer = setTimeout(() => {
+        settleLightboxTrackIdle();
+        lightboxSlideResetTimer = null;
+      }, 275);
+    } else {
+      settleLightboxTrackIdle();
+    }
+  }
 
   const showMulti = total > 1;
   if (lightboxDots) {
@@ -506,14 +569,16 @@ function renderLightboxPhoto() {
   }
 }
 
-function setLightboxPhoto(idx) {
+function setLightboxPhoto(idx, dragOffsetPx = 0) {
   if (idx < 0 || idx >= lightboxPhotos.length || idx === lightboxPhotoIndex) return;
+  const outgoingUrl = lightboxPhotos[lightboxPhotoIndex] || '';
+  const direction = idx > lightboxPhotoIndex ? 1 : -1;
   lightboxPhotoIndex = idx;
-  renderLightboxPhoto();
+  renderLightboxPhoto(direction, dragOffsetPx, outgoingUrl);
 }
 
-function stepLightboxPhoto(delta) {
-  setLightboxPhoto(lightboxPhotoIndex + delta);
+function stepLightboxPhoto(delta, dragOffsetPx = 0) {
+  setLightboxPhoto(lightboxPhotoIndex + delta, dragOffsetPx);
 }
 
 // Photo Lightbox Modal
@@ -524,10 +589,19 @@ function openPhotoLightbox(profile, startIdx = 0) {
   lightboxProfileName = profile.name || '';
 
   if (lightboxPhotos.length > 0) {
+    // Preload and decode sibling photos immediately so swipes never flicker
+    for (const url of lightboxPhotos) {
+      const pre = new Image();
+      pre.src = url;
+      if (typeof pre.decode === 'function') {
+        pre.decode().catch(() => {});
+      }
+    }
     lightboxPhotoIndex = Math.max(0, Math.min(startIdx, lightboxPhotos.length - 1));
-    renderLightboxPhoto();
+    renderLightboxPhoto(0);
   } else if (profile.avatar_svg) {
     lightboxPhotos = [];
+    if (lightboxViewport) lightboxViewport.style.display = 'none';
     lightboxImg.src = '';
     lightboxImg.style.display = 'none';
     lightboxSvg.style.display = 'flex';
@@ -548,10 +622,22 @@ function closePhotoLightbox() {
   if (photoLightboxModal && !photoLightboxModal.classList.contains('hidden')) {
     photoLightboxModal.classList.add('hidden');
     document.body.style.overflow = '';
+    if (lightboxSlideResetTimer) {
+      clearTimeout(lightboxSlideResetTimer);
+      lightboxSlideResetTimer = null;
+    }
     lightboxPhotos = [];
     lightboxPhotoIndex = 0;
     lightboxProfileName = '';
     lightboxSuppressClick = false;
+    if (lightboxViewport) lightboxViewport.style.display = 'flex';
+    if (lightboxTrack) {
+      lightboxTrack.classList.remove('is-sliding');
+      lightboxTrack.style.transition = 'none';
+      lightboxTrack.style.transform = 'translate3d(0, 0, 0)';
+    }
+    if (lightboxImgPrev) lightboxImgPrev.src = '';
+    if (lightboxImgNext) lightboxImgNext.src = '';
     if (lightboxImg) {
       lightboxImg.src = '';
       lightboxImg.style.transform = '';
@@ -1371,7 +1457,6 @@ function renderCurrentProfile() {
           <span class="profile-hero-photo-dots">${photos
             .map((_, idx) => `<span class="profile-hero-photo-dot ${idx === 0 ? 'active' : ''}"></span>`)
             .join('')}</span>
-          <span>1/${photos.length}</span>
         </div>`
       : '';
 
@@ -1962,27 +2047,43 @@ if (lightboxDots) {
 if (photoLightboxModal) {
   let lbStartX = 0;
   let lbStartY = 0;
+  let lbStartTime = 0;
   let lbDragging = false;
   let lbDragged = false;
+  let lbEffectiveOffset = 0;
 
   const startLightboxDrag = (clientX, clientY, target) => {
     if (lightboxPhotos.length <= 1) return;
     if (target && target.closest('button')) return;
+    if (lightboxSlideResetTimer) {
+      clearTimeout(lightboxSlideResetTimer);
+      lightboxSlideResetTimer = null;
+    }
     lbStartX = clientX;
     lbStartY = clientY;
+    lbStartTime = performance.now();
     lbDragging = true;
     lbDragged = false;
-    if (lightboxImg) lightboxImg.style.transition = 'none';
+    lbEffectiveOffset = 0;
+    if (lightboxTrack) {
+      syncLightboxNeighbors();
+      lightboxTrack.classList.add('is-sliding');
+      lightboxTrack.style.transition = 'none';
+      lightboxTrack.style.transform = 'translate3d(-100%, 0, 0)';
+    }
   };
 
   const moveLightboxDrag = (clientX, clientY) => {
     if (!lbDragging) return;
     const diffX = clientX - lbStartX;
     const diffY = clientY - lbStartY;
-    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+    if (Math.abs(diffX) > 6 && Math.abs(diffX) > Math.abs(diffY)) {
       lbDragged = true;
-      if (lightboxImg) {
-        lightboxImg.style.transform = `translateX(${diffX * 0.45}px)`;
+      const atStartBoundary = lightboxPhotoIndex === 0 && diffX > 0;
+      const atEndBoundary = lightboxPhotoIndex === lightboxPhotos.length - 1 && diffX < 0;
+      lbEffectiveOffset = atStartBoundary || atEndBoundary ? diffX * 0.22 : diffX;
+      if (lightboxTrack) {
+        lightboxTrack.style.transform = `translate3d(calc(-100% + ${lbEffectiveOffset}px), 0, 0)`;
       }
     }
   };
@@ -1991,21 +2092,32 @@ if (photoLightboxModal) {
     if (!lbDragging) return;
     lbDragging = false;
     const diffX = clientX - lbStartX;
-    if (lightboxImg) {
-      lightboxImg.style.transition = 'transform 0.16s ease-out';
-      lightboxImg.style.transform = '';
-    }
+    const elapsed = Math.max(1, performance.now() - lbStartTime);
+    const velocity = Math.abs(diffX) / elapsed;
+    const swipedThreshold =
+      lbDragged && (Math.abs(diffX) >= 40 || (Math.abs(diffX) >= 18 && velocity >= 0.35));
+
     if (lbDragged) {
       lightboxSuppressClick = true;
       setTimeout(() => {
         lightboxSuppressClick = false;
       }, 60);
     }
-    if (Math.abs(diffX) >= 40 && lbDragged) {
-      if (diffX < 0 && lightboxPhotoIndex < lightboxPhotos.length - 1) {
-        stepLightboxPhoto(1);
-      } else if (diffX > 0 && lightboxPhotoIndex > 0) {
-        stepLightboxPhoto(-1);
+
+    if (swipedThreshold && diffX < 0 && lightboxPhotoIndex < lightboxPhotos.length - 1) {
+      stepLightboxPhoto(1, lbEffectiveOffset);
+    } else if (swipedThreshold && diffX > 0 && lightboxPhotoIndex > 0) {
+      stepLightboxPhoto(-1, lbEffectiveOffset);
+    } else if (lightboxTrack) {
+      if (lbDragged) {
+        lightboxTrack.style.transition = 'transform 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+        lightboxTrack.style.transform = 'translate3d(-100%, 0, 0)';
+        lightboxSlideResetTimer = setTimeout(() => {
+          settleLightboxTrackIdle();
+          lightboxSlideResetTimer = null;
+        }, 250);
+      } else {
+        settleLightboxTrackIdle();
       }
     }
   };
@@ -2025,9 +2137,13 @@ if (photoLightboxModal) {
 
   photoLightboxModal.addEventListener('pointercancel', () => {
     lbDragging = false;
-    if (lightboxImg) {
-      lightboxImg.style.transition = 'transform 0.16s ease-out';
-      lightboxImg.style.transform = '';
+    if (lightboxTrack) {
+      lightboxTrack.style.transition = 'transform 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+      lightboxTrack.style.transform = 'translate3d(-100%, 0, 0)';
+      lightboxSlideResetTimer = setTimeout(() => {
+        settleLightboxTrackIdle();
+        lightboxSlideResetTimer = null;
+      }, 250);
     }
   });
 

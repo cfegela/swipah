@@ -190,7 +190,13 @@
       <div id="photo-lightbox-modal" class="modal-overlay photo-lightbox-overlay hidden" role="dialog" aria-modal="true" aria-label="Full Profile Photo">
         <button id="btn-close-lightbox" class="lightbox-close-btn" title="Close photo" aria-label="Close photo">✕</button>
         <div class="lightbox-content" id="lightbox-content">
-          <img id="lightbox-img" src="" alt="Full profile photo" class="lightbox-img" />
+          <div class="lightbox-viewport" id="lightbox-viewport">
+            <div class="lightbox-track" id="lightbox-track">
+              <div class="lightbox-slide lightbox-slide-peek"><img id="lightbox-img-prev" src="" alt="" class="lightbox-img lightbox-peek-img" /></div>
+              <div class="lightbox-slide"><img id="lightbox-img" src="" alt="Full profile photo" class="lightbox-img" /></div>
+              <div class="lightbox-slide lightbox-slide-peek"><img id="lightbox-img-next" src="" alt="" class="lightbox-img lightbox-peek-img" /></div>
+            </div>
+          </div>
           <div id="lightbox-svg" class="lightbox-svg" style="display: none;"></div>
         </div>
         <div id="lightbox-dots" class="lightbox-dots hidden" role="tablist" aria-label="Profile photos"></div>
