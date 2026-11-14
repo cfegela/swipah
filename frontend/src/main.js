@@ -25,6 +25,7 @@ let myMatches = [];
 let chosenDateProfileId = null;
 let isResolvingDate = false;
 let lastSeenRound = 0;
+let lastLoggedRoundKey = '';
 let isSubmittingLike = false;
 let dateInProgressTimerId = null;
 let dateInProgressIntervalId = null;
@@ -966,6 +967,7 @@ function showLandingView() {
   chosenDateProfileId = null;
   isResolvingDate = false;
   lastSeenRound = 0;
+  lastLoggedRoundKey = '';
 
   setRoomUrl(null);
   closeHostModal();
@@ -1582,24 +1584,13 @@ function renderCurrentProfile() {
         `
             : ''
         }
-        <div class="profile-test-debug-box">
-          <div class="test-debug-header">🧪 Testing Info</div>
-          <div class="test-debug-row">
-            <span class="test-debug-label">Match:</span>
-            <span class="test-debug-value ${profile.is_match ? 'test-val-match' : 'test-val-nomatch'}">
-              ${profile.is_match ? 'YES' : 'NO'}
-            </span>
-          </div>
-          <div class="test-debug-row">
-            <span class="test-debug-label">Date Outcome:</span>
-            <span class="test-debug-value test-outcome-${profile.date_outcome || 'none'}">
-              ${formatTestOutcome(profile)}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   `;
+
+  console.log(
+    `[Swipah Testing Info] ${profile.name} (${currentProfileIdx + 1}/${currentRoundProfiles.length}) | Match: ${profile.is_match ? 'YES' : 'NO'} | Date Outcome: ${formatTestOutcome(profile)}`
+  );
 
   syncLikeButtons(isLiked);
 }
@@ -1913,6 +1904,20 @@ async function loadAndShowGameView() {
     currentRoundProfiles = state.profiles || [];
     myLikes = state.my_likes || [];
     myMatches = state.my_matches || [];
+
+    const roundLogKey = `${currentRoom.id}:${currentRoom.current_round}`;
+    if (roundLogKey !== lastLoggedRoundKey && currentRoundProfiles.length > 0) {
+      lastLoggedRoundKey = roundLogKey;
+      console.log(
+        `[Swipah Round ${currentRoom.current_round}] Profiles:`,
+        currentRoundProfiles.map((p, idx) => ({
+          '#': idx + 1,
+          name: p.name,
+          match: !!p.is_match,
+          dateOutcome: formatTestOutcome(p),
+        }))
+      );
+    }
 
     const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
     const isHost = !!myPlayer?.is_host;
