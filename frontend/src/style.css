@@ -1072,9 +1072,9 @@ input[type="text"]:focus {
 }
 
 .btn-heart:not(:disabled):hover {
-  background: rgba(236, 72, 153, 0.14);
-  border-color: rgba(236, 72, 153, 0.55);
-  color: #f472b6;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #f87171;
   transform: scale(1.08);
 }
 
@@ -1083,10 +1083,10 @@ input[type="text"]:focus {
 }
 
 .btn-heart.btn-liked {
-  background: rgba(236, 72, 153, 0.18) !important;
-  border-color: rgba(236, 72, 153, 0.6) !important;
-  color: #ec4899 !important;
-  box-shadow: 0 0 14px rgba(236, 72, 153, 0.25) !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.25) !important;
 }
 
 .btn-heart.btn-liked .heart-icon {
@@ -1105,12 +1105,11 @@ input[type="text"]:focus {
 }
 
 .profile-hero-like-btn:not(:disabled):hover {
-  background: rgba(45, 16, 36, 0.78);
+  background: rgba(45, 16, 22, 0.78);
 }
 
 .profile-hero-like-btn.btn-liked {
-  background: rgba(54, 12, 37, 0.85) !important;
-  color: #f472b6 !important;
+  background: rgba(54, 14, 20, 0.85) !important;
 }
 
 .profile-hero-photo-pill {
