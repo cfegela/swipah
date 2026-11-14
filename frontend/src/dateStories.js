@@ -4,22 +4,22 @@ export function cleanLocation(loc) {
   return loc ? loc.replace(/\s*\([^)]*(?:miles?|mi\s*away|online)[^)]*\)/gi, '').trim() : '';
 }
 
-function getVariantIndex(profile, numVariants = 5) {
-  if (!profile) return Math.floor(Math.random() * numVariants);
+function getVariantIndex(profile) {
+  if (!profile) return Math.floor(Math.random() * 1000);
   const seed = String(profile.id || profile.profile_id || profile.name || '');
-  if (!seed) return Math.floor(Math.random() * numVariants);
+  if (!seed) return Math.floor(Math.random() * 1000);
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash << 5) - hash + seed.charCodeAt(i);
     hash |= 0;
   }
-  return Math.abs(hash) % numVariants;
+  return hash >>> 0;
 }
 
 export function getDateStory(profile, outcome) {
   const name = profile?.name || 'Your Date';
   const firstName = name.split(' ')[0] || name;
-  const variant = getVariantIndex(profile, 5);
+  const variant = getVariantIndex(profile);
 
   let title = '';
   let badgeText = '';
@@ -77,6 +77,51 @@ export function getDateStory(profile, outcome) {
             `The sexual tension during drinks was so thick you could cut it with a steak knife. The second their front door clicked shut behind you, ${firstName} pinned you against the wall, shoved their tongue down your throat, and ripped your shirt buttons clean off.`,
             `It was a masterclass in passionate foreplay. From the entryway floor to the kitchen counter to the mattress, every single inch of your body was thoroughly worshipped. Both of you experienced multiple earth-shattering climaxes that shook the bedframe.`,
             `The morning after was somehow even better: lazy snuggles, gentle kisses, and an enthusiastic round of shower sex that almost made you miss your afternoon shift. You have officially found your new favorite human.`
+          ]
+        },
+        // Variant 5: The Boutique Hotel Wrecking Ball
+        {
+          title: `Fucking Like Animals with ${name}!`,
+          paragraphs: [
+            `One stiff tequila shot turned into heavy grinding on the dive bar dance floor, and neither of you had the patience to wait for an apartment. You split a last-minute boutique hotel room down the block and were already tearing each other's clothes off before the elevator doors even closed.`,
+            `Once inside, it was pure, unfiltered filth. ${firstName} talked dirty in your ear, fucked you raw-passion style across the king bed, spun you around against the floor-to-ceiling window, and went down on you like their rent depended on it. Your legs were literally shaking too hard to stand.`,
+            `You wrecked every pillow in the room, ordered obscene amounts of room-service fries at 2 AM buck-naked, and squeezed in one more filthy morning quickie before checkout. Hall-of-fame level chemistry.`
+          ]
+        },
+        // Variant 6: The Balcony Quickie & Championship Rounds
+        {
+          title: `Mind-Blowing Filth with ${name}!`,
+          paragraphs: [
+            `Dinner was hot enough, but when ${firstName} pulled you out onto their private terrace with two glasses of wine, things went straight past PG-13. Within five minutes your pants were around your ankles while they bent you over the patio table under the city skyline.`,
+            `Knowing someone could spot you only made it ten times hotter. You moved inside before getting arrested and spent the next three hours trading sloppy, breathless oral, spanking, and relentless pounding until the sheets looked like a crime scene.`,
+            `Completely dehydrated and grinning like an idiot, you got tucked into bed with a cold bottle of Gatorade and a morning blow-your-mind finale. Worth every ounce of soreness.`
+          ]
+        },
+        // Variant 7: The Dirty Talk & Oral Grandmaster
+        {
+          title: `Soul Left Your Body with ${name}!`,
+          paragraphs: [
+            `${firstName} spent the whole bar tab flirting like an absolute menace, whispering filthy promises under their breath every time the bartender walked away. By the time you hit their mattress, you were practically feral.`,
+            `Turns out, they weren't bluffing one bit. Their tongue game was certified black-belt wizardry—teasing, lapping, and driving you completely out of your goddamn mind until you were cursing in tongues and gripping the headboard for dear life.`,
+            `After you came hard enough to see dead ancestors, they fucked you slow, deep, and filthy until dawn. You walked to your morning Uber feeling like royalty.`
+          ]
+        },
+        // Variant 8: The Kitchen Island Rodeo
+        {
+          title: `Zero Chill, All Thrill with ${name}!`,
+          paragraphs: [
+            `You went back to ${firstName}'s place supposedly to "check out their vinyl collection." Five seconds past the threshold, you were hoisting each other onto the marble kitchen island while knocking a bowl of avocados straight onto the floor.`,
+            `The raw fucking on the countertop was loud, sloppy, and absurdly good. Skin slapping, breathless cursing, biting shoulders, and zero awkwardness—just two horny adults completely synced up and chasing the nastiest, hottest orgasm possible.`,
+            `You wiped avocado off your elbow, tumbled into their bed for round three, and woke up to ${firstName} grinning between your thighs. Ten out of fucking ten.`
+          ]
+        },
+        // Variant 9: The Speakeasy Booth Escalation
+        {
+          title: `Certified Freak Match with ${name}!`,
+          paragraphs: [
+            `Hidden in the dim corner booth of a speakeasy, hands crept straight under skirts and waistbands before the second round of cocktails even landed. Walking home, you barely made it up their brownstone steps without tearing buttons off.`,
+            `Behind closed doors, ${firstName} brought out the good toys, slapped your ass just right, and hit angles you didn't even know existed. Every filthy whisper landed dead-on, turning the bedroom into an athletic, sweat-drenched marathon.`,
+            `You left their apartment at noon with hickeys hidden under your collar, sore thighs, and a calendar invite already booked for Friday night.`
           ]
         }
       ];
@@ -137,6 +182,51 @@ export function getDateStory(profile, outcome) {
             `They were generous and attentive between the sheets, making sure you got yours before taking care of themselves. Falling asleep wrapped in their arms felt effortless and comfortable.`,
             `Sneaking past their sleeping golden retriever at 7 AM was an Olympic stealth challenge, but ${firstName} woke up just enough to pull you in for one last sleepy, affectionate kiss. A thoroughly pleasant victory.`
           ]
+        },
+        // Variant 5: Tipsy Foreplay & Solid Finish
+        {
+          title: `Horny & Wholesome with ${name}`,
+          paragraphs: [
+            `After three overpriced IPAs, you both got loose, giggly, and shamelessly handsy walking back to ${firstName}'s place. Clothes came off in a hurried trail down the hallway while someone's elbow smacked a houseplant off its stand.`,
+            `Even with a couple goofy fumbles trying to get a condom open in the dark, the actual banging was super fun, loud, and mutually satisfying. Plenty of dirty jokes mid-thrust and nobody took themselves too seriously.`,
+            `You shared leftover tacos in your underwear at 1 AM and got a solid nightcap smooch at the door. Solid B+ dick/pussy game and awesome company.`
+          ]
+        },
+        // Variant 6: Neighbor Wall-Bang Applause
+        {
+          title: `Noisy Good Time with ${name}`,
+          paragraphs: [
+            `You headed back to ${firstName}'s shoebox studio where the bed creaked like a haunted pirate ship. Once you started fooling around, neither of you cared one bit about the paper-thin drywall.`,
+            `The hookup was sweaty, energetic, and surprisingly well-paced. Just as you both finished with a loud string of f-bombs, someone through the wall politely tapped back twice in approval.`,
+            `You both died laughing under the sheets, cracked a warm sparkling water, and cuddled for an hour. Slightly shameless, definitely satisfying.`
+          ]
+        },
+        // Variant 7: Beat the Roommate Clock
+        {
+          title: `Sneaky Fun with ${name}`,
+          paragraphs: [
+            `You snuck back to ${firstName}'s room knowing their roommate's shift ended in exactly forty-five minutes. That ticking clock turned into instant adrenaline and sloppy, desperate making out on top of the bedspread.`,
+            `No fancy positions—just fast, focused, straight-to-the-point fucking that got the job done cleanly with five minutes to spare. Both of you nutted just as keys jingled down the stairwell.`,
+            `Pulling your jeans up in record time while sharing a smug high-five made you feel like horny teenagers again. Short, dirty, and thoroughly worth it.`
+          ]
+        },
+        // Variant 8: No-AC Summer Sweatbox
+        {
+          title: `Humid & Satisfied with ${name}`,
+          paragraphs: [
+            `Their apartment thermostat was broken in the middle of August, so peeling off your sweaty clothes wasn't even a hard sell. Five minutes into kissing on the mattress, you were both slicked in sweat like glazed donuts.`,
+            `Sure, sliding apart sounded like peeling vinyl off a booth, and a box fan was wheezing two feet from your ass, but ${firstName} knew how to work their hips and kept the rhythm filthy enough to distract from the swamp heat.`,
+            `A cold double shower afterward washed off the funk and earned a cheeky ass grab on the way out. Messy, muggy, and damn good.`
+          ]
+        },
+        // Variant 9: Shaky Start, Strong Finish
+        {
+          title: `Slow Start, Great Finish with ${name}`,
+          paragraphs: [
+            `Things started slightly awkward when your teeth clacked hard during the first makeout and ${firstName} accidentally knees-dropped onto the edge of the bedframe. For thirty seconds, you thought the night was cooked.`,
+            `Thank god you both brushed it off, poured another drink, and got back on track. Once they swapped to using their hands and mouth properly, the tension melted into a really hot, satisfying bang session.`,
+            `Not every move looked like a porn shoot, but everybody got off happy and left with a genuine smile.`
+          ]
         }
       ];
 
@@ -196,6 +286,51 @@ export function getDateStory(profile, outcome) {
             `What followed was two hours of relentless, uncoordinated, rhythm-less friction. Every time you tried to adjust or guide them, ${firstName} shushed you and insisted on "aligning our root chakras." You felt like you were being scrubbed with 80-grit sandpaper.`,
             `Sweaty, chafed, completely unfulfilled, and emotionally drained, you slipped out while they were in the bathroom re-lighting their sage bundle. Blocked and deleted forever.`
           ]
+        },
+        // Variant 5: The Live Podcast Sex Lecture
+        {
+          title: `Total Vibe Killer with ${name}!`,
+          paragraphs: [
+            `Things were actually getting heavy until you got undressed and ${firstName} paused everything to give you a 20-minute TED Talk about biohacking, seed oils, and why orgasms supposedly drain their "alpha frequency."`,
+            `When they finally agreed to touch you, they treated foreplay like assembling IKEA furniture without the Allen wrench—jackhammering at a bizarre 45-degree angle while asking if you were "close yet" every nine seconds.`,
+            `Zero clue what they were doing, negative self-awareness, and your libido packed its bags and died. You ordered an Uber before they finished putting their compression socks back on.`
+          ]
+        },
+        // Variant 6: The Post-Chipotle Tragedy
+        {
+          title: `Biological Warfare with ${name}!`,
+          paragraphs: [
+            `Against all better judgment, you let ${firstName} order extra-hot carnitas, queso, and double beans right before going back to their apartment to fool around. Ten minutes into making out, their stomach let out a sound like a dying trombone.`,
+            `Midway through undressing you, they ripped a silent, lethal fart under the fitted sheet that instantly weaponized the entire bedroom air supply. Worse, they didn't apologize—they just giggled and pulled the blanket up over both your heads like a psychopath.`,
+            `You gagged, kicked your way out of the Dutch oven like a trapped badger, grabbed your shoes bare-assed, and ghosted them mid-stride down the hallway.`
+          ]
+        },
+        // Variant 7: Whiskey Dick & Pure Audacity
+        {
+          title: `All Talk, Zero Action with ${name}!`,
+          paragraphs: [
+            `${firstName} spent two full hours at the bar bragging endlessly about what an unstoppable sex god they were. Naturally, your expectations were sky high when you stumbled through their door.`,
+            `Turns out, six tequila sodas rendered their genitals completely offline. Instead of owning it gracefully, they spent forty minutes awkwardly mashing marshmallow-soft equipment against your thigh while whining that "condoms feel weird" and blaming your lighting.`,
+            `You left blue-balled, annoyed, and insulted—and they still had the fucking nerve to text you "round 2 soon 😉" the next morning.`
+          ]
+        },
+        // Variant 8: Worst Dirty Talk in History
+        {
+          title: `Unclean Dirty Talk with ${name}!`,
+          paragraphs: [
+            `You were totally down to get laid until ${firstName} leaned in close during foreplay and tried their hand at spontaneous dirty talk. Whatever came out of their mouth should be investigated by the Hague.`,
+            `They kept referring to their own junk in the third person as "Daddy's little tax write-off," smacked your butt like they were testing a ripe watermelon at Costco, and aggressively whispered, "Yeah, take this mediocre dick, little spreadsheet."`,
+            `You couldn't stop laughing or cringing hard enough to recover. You faked a sudden migraine, shoved your underwear in your pocket, and deleted the app.`
+          ]
+        },
+        // Variant 9: Ex's Mattress & Surprise Venmo
+        {
+          title: `Pure Ick Overload with ${name}!`,
+          paragraphs: [
+            `Should have turned around the moment you walked into ${firstName}'s room and saw a bare stained mattress on the floor next to a giant framed photo of their ex's golden retriever named "Alimony."`,
+            `Between dog hair sticking to every sweaty inch of skin, terrible unwashed breath, and them stopping midway through to answer a FaceTime call from their mom on speakerphone, the hookup was an absolute trainwreck.`,
+            `Walking home unsatisfied in the cold rain, your phone buzzed with a $47.50 Venmo request from ${firstName} titled "split tap water + towel laundry." Straight to jail.`
+          ]
         }
       ];
 
@@ -254,6 +389,51 @@ export function getDateStory(profile, outcome) {
             `An incredible makeout session on their rug had both of you stripped down to your underwear, breathless and completely intoxicated with mutual lust. ${firstName} offered to pour a special "secret aphrodisiac" to kick things into high gear.`,
             `You happily clinked glasses, downed the sweet cherry concoction, and pulled them back onto the mattress for a fiery round of foreplay. But as your lips met theirs, your limbs suddenly went completely numb.`,
             `"The paralytic works fast, doesn't it?" they giggled affectionately, stroking your paralyzed face before dragging your limp body toward the basement meat grinder. You were thoroughly seduced, and then thoroughly murdered. Eliminated from Swipah!`
+          ]
+        },
+        // Variant 5: The Gloryhole Guillotine
+        {
+          title: `Blown Away (Literally) by ${name}...`,
+          paragraphs: [
+            `After three tequila shots, ${firstName} dragged you into their soundproofed "freak dungeon," talking dirty as hell and promising to blow your fucking mind. Horny and zero-percent cautious, you eagerly dropped your pants when they told you to step up to the velvet-lined partition.`,
+            `"Close your eyes and let me work some magic, babe," they whispered through the wall. You were rock-solid, grinning like an idiot, waiting for the ride of your life—right up until you heard the unmistakable rattle of a heavy pulley chain.`,
+            `A custom-engraved stainless steel blade dropped faster than your standards, slicing the evening catastrophically short. You died doing what you loved—being ridiculously down bad for a hot psycho. Eliminated from Swipah!`
+          ]
+        },
+        // Variant 6: The Choke-Me-Daddy Trapdoor
+        {
+          title: `Rough Play Gone Way Too Far with ${name}...`,
+          paragraphs: [
+            `The foreplay was feral—biting, scratching, throwing each other onto their king-sized bed like absolute animals. Sweat dripping, ${firstName} straddled your hips, leaned down to kiss your neck, and growled, "Tell me how dirty you want it tonight."`,
+            `"Choke me like you hate me," you gasped like a dumbass. Their eyes lit up like a kid on Christmas morning, and they reached behind the headboard—not for handcuffs, but for a concealed brass lever labeled 'DISPOSAL.'`,
+            `The mattress folded cleanly in half, dropping your naked, confused ass forty feet straight into a pit of hungry snapping turtles and hydrochloric acid. That safe word wouldn't have saved you anyway. You are dead as fuck!`
+          ]
+        },
+        // Variant 7: The Sexy Oil & Blowtorch Finale
+        {
+          title: `Too Hot to Handle with ${name}...`,
+          paragraphs: [
+            `Things escalated stupidly fast on their kitchen island—panties flying, dirty talk cranked to eleven, and ${firstName} slathering your entire naked body in "imported sensual massage oil" while biting their lip.`,
+            `You were grinding against them, moaning shamelessly and thinking you'd hit the absolute jackpot, until you noticed the distinct, unmistakable smell of unleaded 93-octane gasoline.`,
+            `"Baby, you're smoking hot," ${firstName} purred, pulling a silver Zippo out of their bathrobe and tossing it casually onto your glistening chest. You went up in a glorious fireball visible from space. Eliminated from Swipah!`
+          ]
+        },
+        // Variant 8: The Strap-On Harpoon
+        {
+          title: `Deeply Penetrated by ${name}'s Betrayal...`,
+          paragraphs: [
+            `${firstName} promised a "kinky little surprise" if you put on the silk blindfold and got on all fours across their shag rug. Feeling adventurous and horny out of your damn mind, you said fuck it and complied immediately.`,
+            `You heard leather straps buckling, heavy breathing, and the ominous metallic click-clack of a pneumatic pressurized air tank. "Ready to take all of it?" they whispered darkly right behind you.`,
+            `Before you could utter a single syllable, a CO2-powered commercial whale harpoon launched straight through your sternum and pinned you to the drywall like a fucked-up butterfly. Rest in pieces, champ—you've been eliminated!`
+          ]
+        },
+        // Variant 9: The Acid-Bath Orgasm
+        {
+          title: `Dissolved in Lust with ${name}...`,
+          paragraphs: [
+            `By midnight, both of you were butt-naked, tangled in satin sheets, and going at it so loud the neighbors probably filed a noise complaint with the UN. ${firstName} was an absolute demon in bed, and you thought you'd genuinely found your soulmate.`,
+            `After round two, still panting and covered in sweat, ${firstName} kissed your forehead and drew you a "steaming mineral detox bath" in a weirdly reinforced fiberglass tub. You slipped right in, groaning in pure post-nut bliss.`,
+            `"Enjoy the tingling sensation, bitch—that's drain cleaner," they smiled sweetly, kicking back with a glass of Pinot Noir as you fizzed away like a giant horny Alka-Seltzer tablet. Permanently eliminated from Swipah!`
           ]
         }
       ];
