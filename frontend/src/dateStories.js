@@ -557,7 +557,7 @@ export function getConciliatoryMessage(roundNumber) {
     },
     {
       icon: '🍦 📱 🚫',
-      headline: 'Left on Read by the Universe',
+      headline: 'Left Unread by the Universe',
       body: 'Zero sparks, zero matches, zero chemistry. None of the profiles in your deck fancied you back this round! Take a deep breath, refresh your emotional battery, and prepare for the next round.',
       advice: 'Remember: It\'s not you, it\'s the algorithm. (Okay, maybe a little bit you).'
     }
