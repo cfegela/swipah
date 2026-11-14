@@ -1551,21 +1551,21 @@ function renderCurrentProfile() {
           <div class="profile-bio">${escapeHtml(profile.bio)}</div>
         </div>
         ${
-          redFlagsListHtml
-            ? `
-          <div class="profile-field-section">
-            <div class="profile-field-label">Red Flags:</div>
-            <ul class="profile-bullet-list flags-bullet-red">${redFlagsListHtml}</ul>
-          </div>
-        `
-            : ''
-        }
-        ${
           greenFlagsListHtml
             ? `
           <div class="profile-field-section">
             <div class="profile-field-label">Green Flags:</div>
             <ul class="profile-bullet-list flags-bullet-green">${greenFlagsListHtml}</ul>
+          </div>
+        `
+            : ''
+        }
+        ${
+          redFlagsListHtml
+            ? `
+          <div class="profile-field-section">
+            <div class="profile-field-label">Red Flags:</div>
+            <ul class="profile-bullet-list flags-bullet-red">${redFlagsListHtml}</ul>
           </div>
         `
             : ''
