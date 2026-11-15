@@ -2037,7 +2037,7 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
     return;
   }
   if (!sexOrgans) {
-    showAlert('Please select how you reproduce (Sperm or Egg).');
+    showAlert('Please select how you reproduce (Sperm or Eggs).');
     return;
   }
   if (!lookingFor) {
@@ -2088,7 +2088,7 @@ btnJoinGame.addEventListener('click', async () => {
     return;
   }
   if (!sexOrgans) {
-    showAlert('Please select how you reproduce (Sperm or Egg).');
+    showAlert('Please select how you reproduce (Sperm or Eggs).');
     return;
   }
   if (!lookingFor) {
