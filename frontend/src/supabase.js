@@ -34,21 +34,20 @@ export async function ensureAnonymousSession() {
 /**
  * Create a new room with host placed in Seat 1.
  */
-export async function createRoom(displayName, lookingFor) {
+export async function createRoom(displayName, lookingFor, sexOrgans = null) {
   await ensureAnonymousSession();
-  let { data, error } = await supabase.rpc('create_room', {
+  const params = {
     p_display_name: displayName.trim(),
     p_looking_for: lookingFor,
-  });
+    p_sex_organs: sexOrgans,
+  };
+  let { data, error } = await supabase.rpc('create_room', params);
 
   // Self-heal if the session was invalidated or stale
   if (error && error.message?.includes('foreign key constraint')) {
     await supabase.auth.signOut().catch(() => {});
     await ensureAnonymousSession();
-    const retry = await supabase.rpc('create_room', {
-      p_display_name: displayName.trim(),
-      p_looking_for: lookingFor,
-    });
+    const retry = await supabase.rpc('create_room', params);
     data = retry.data;
     error = retry.error;
   }
@@ -60,23 +59,21 @@ export async function createRoom(displayName, lookingFor) {
 /**
  * Concurrency-safe room joining with seat allocation.
  */
-export async function joinRoom(roomId, displayName, lookingFor) {
+export async function joinRoom(roomId, displayName, lookingFor, sexOrgans = null) {
   await ensureAnonymousSession();
-  let { data, error } = await supabase.rpc('join_room', {
+  const params = {
     p_room_id: roomId,
     p_display_name: displayName.trim(),
     p_looking_for: lookingFor,
-  });
+    p_sex_organs: sexOrgans,
+  };
+  let { data, error } = await supabase.rpc('join_room', params);
 
   // Self-heal if the session was invalidated or stale
   if (error && error.message?.includes('foreign key constraint')) {
     await supabase.auth.signOut().catch(() => {});
     await ensureAnonymousSession();
-    const retry = await supabase.rpc('join_room', {
-      p_room_id: roomId,
-      p_display_name: displayName.trim(),
-      p_looking_for: lookingFor,
-    });
+    const retry = await supabase.rpc('join_room', params);
     data = retry.data;
     error = retry.error;
   }

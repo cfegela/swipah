@@ -158,8 +158,34 @@ async function runTest() {
   const { data: soloCreate } = await soloHost.client.rpc('create_room', {
     p_display_name: 'SoloTester',
     p_looking_for: 'Both',
+    p_sex_organs: 'pole',
   });
+  if (soloCreate.player.sex_organs !== 'pole') {
+    throw new Error(`Expected host sex_organs to be 'pole', got '${soloCreate.player.sex_organs}'`);
+  }
   const soloRoomId = soloCreate.room.id;
+
+  const soloJoiner = await createAnonymousClient();
+  const { data: soloJoinData, error: soloJoinErr } = await soloJoiner.client.rpc('join_room', {
+    p_room_id: soloRoomId,
+    p_display_name: 'HoleJoiner',
+    p_looking_for: 'Woman',
+    p_sex_organs: 'hole',
+  });
+  if (soloJoinErr) throw new Error('Joiner with sex_organs failed: ' + soloJoinErr.message);
+  if (soloJoinData.player.sex_organs !== 'hole') {
+    throw new Error(`Expected joiner sex_organs to be 'hole', got '${soloJoinData.player.sex_organs}'`);
+  }
+
+  const { error: badOrganErr } = await p5.client.rpc('create_room', {
+    p_display_name: 'BadOrgan',
+    p_looking_for: 'Man',
+    p_sex_organs: 'invalid',
+  });
+  if (!badOrganErr) {
+    throw new Error('Expected invalid p_sex_organs value to be rejected');
+  }
+
   const { data: soloStart, error: soloStartErr } = await soloHost.client.rpc('start_game', {
     p_room_id: soloRoomId,
   });
@@ -167,7 +193,16 @@ async function runTest() {
   if (soloStart.room.status !== 'in_progress') {
     throw new Error('Single player room failed to transition to in_progress');
   }
-  console.log('   ✓ Single-player room started successfully!');
+  const { data: stateAfterStart, error: stateErr } = await soloHost.client.rpc('fetch_game_round_state', {
+    p_room_id: soloRoomId,
+  });
+  if (stateErr) throw new Error('fetch_game_round_state failed: ' + stateErr.message);
+  const hostStatePlayer = stateAfterStart.players.find((p) => p.seat_number === 1);
+  const joinerStatePlayer = stateAfterStart.players.find((p) => p.seat_number === 2);
+  if (hostStatePlayer?.sex_organs !== 'pole' || joinerStatePlayer?.sex_organs !== 'hole') {
+    throw new Error('fetch_game_round_state did not preserve player sex_organs');
+  }
+  console.log('   ✓ Single-player room & player sex_organs persistence verified cleanly!');
 
   console.log('\n🎉 ALL LOBBY & MULTIPLAYER TESTS PASSED!\n');
 }

@@ -127,7 +127,6 @@ function escapeHtml(str) {
 
 // Helpers: Local Storage
 const STORAGE_KEY_NAME = 'swipah_player_name';
-const STORAGE_KEY_LOOKING_FOR = 'swipah_looking_for';
 
 function getSavedName() {
   return localStorage.getItem(STORAGE_KEY_NAME) || '';
@@ -136,28 +135,6 @@ function getSavedName() {
 function saveName(name) {
   if (name) {
     localStorage.setItem(STORAGE_KEY_NAME, name.trim());
-  }
-}
-
-function getSavedLookingFor() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_LOOKING_FOR);
-    if (!raw) return [];
-    if (raw === 'Both' || raw === 'Anything That Moves') return ['Man', 'Woman'];
-    if (raw === 'Man') return ['Man'];
-    if (raw === 'Woman') return ['Woman'];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
-}
-
-function saveLookingFor(val) {
-  if (Array.isArray(val)) {
-    localStorage.setItem(STORAGE_KEY_LOOKING_FOR, JSON.stringify(val));
-  } else if (typeof val === 'string') {
-    localStorage.setItem(STORAGE_KEY_LOOKING_FOR, val);
   }
 }
 
@@ -187,14 +164,18 @@ const joinCard = document.getElementById('join-card');
 
 const hostModal = document.getElementById('host-modal');
 const hostPlayerName = document.getElementById('host-player-name');
-const hostLookingForGroup = document.getElementById('host-looking-for-group');
+const hostSexOrgansGroup = document.getElementById('host-sex-organs-group');
+const hostSexOrgansInput = document.getElementById('host-sex-organs');
+const hostSoughtOrgansGroup = document.getElementById('host-sought-organs-group');
 const hostLookingForInput = document.getElementById('host-looking-for');
 const btnOpenHostPrompt = document.getElementById('btn-open-host-prompt');
 const btnCancelHost = document.getElementById('btn-cancel-host');
 const btnConfirmCreateRoom = document.getElementById('btn-confirm-create-room');
 
 const joinPlayerName = document.getElementById('join-player-name');
-const joinLookingForGroup = document.getElementById('join-looking-for-group');
+const joinSexOrgansGroup = document.getElementById('join-sex-organs-group');
+const joinSexOrgansInput = document.getElementById('join-sex-organs');
+const joinSoughtOrgansGroup = document.getElementById('join-sought-organs-group');
 const joinLookingForInput = document.getElementById('join-looking-for');
 const btnJoinGame = document.getElementById('btn-join-game');
 
@@ -332,71 +313,97 @@ function hideAlert() {
 
 alertClose.addEventListener('click', hideAlert);
 
-// Pill Toggle Group Helpers (Supports selecting Man, Woman, or Both)
+// Pill Toggle Helpers for Sex Organs & Sought Sex Organs
 function getPillGroupSelectedValues(groupEl) {
   if (!groupEl) return [];
   const activeBtns = groupEl.querySelectorAll('.pill-radio-btn.active');
   return Array.from(activeBtns).map((b) => b.getAttribute('data-value'));
 }
 
-function computeLookingForValue(selectedArr) {
-  const hasMan = selectedArr.includes('Man');
-  const hasWoman = selectedArr.includes('Woman');
-  if (hasMan && hasWoman) return 'Both';
-  if (hasMan) return 'Man';
-  if (hasWoman) return 'Woman';
-  return '';
-}
-
-function setPillToggleSelections(groupEl, hiddenInputEl, selectedArr) {
-  if (!groupEl || !hiddenInputEl) return;
-  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
-  buttons.forEach((btn) => {
+function setPillGroupSelections(groupEl, selectedArr) {
+  if (!groupEl) return;
+  groupEl.querySelectorAll('.pill-radio-btn').forEach((btn) => {
     const val = btn.getAttribute('data-value');
     const isSelected = selectedArr.includes(val);
     btn.classList.toggle('active', isSelected);
     btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
   });
-  hiddenInputEl.value = computeLookingForValue(selectedArr);
 }
 
-function initPillToggleGroup(groupEl, hiddenInputEl, onChange) {
-  if (!groupEl || !hiddenInputEl) return;
-  const buttons = groupEl.querySelectorAll('.pill-radio-btn');
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const val = btn.getAttribute('data-value');
-      let currentSelected = getPillGroupSelectedValues(groupEl);
-      if (currentSelected.includes(val)) {
-        currentSelected = currentSelected.filter((v) => v !== val);
-      } else {
-        currentSelected.push(val);
-      }
-      setPillToggleSelections(groupEl, hiddenInputEl, currentSelected);
-      saveLookingFor(currentSelected);
-      if (onChange) onChange();
+function computeLookingForValue(sexOrgans, soughtArr) {
+  if (!sexOrgans || !soughtArr || soughtArr.length === 0) return '';
+  const wantSame = soughtArr.includes('same');
+  const wantDifferent = soughtArr.includes('different');
+  if (wantSame && wantDifferent) return 'Both';
+  if (sexOrgans === 'pole') return wantSame ? 'Man' : 'Woman';
+  if (sexOrgans === 'hole') return wantSame ? 'Woman' : 'Man';
+  return '';
+}
+
+function resetOrganSelectors(sexGroupEl, sexInputEl, soughtGroupEl, lookingForInputEl) {
+  setPillGroupSelections(sexGroupEl, []);
+  setPillGroupSelections(soughtGroupEl, []);
+  if (sexInputEl) sexInputEl.value = '';
+  if (lookingForInputEl) lookingForInputEl.value = '';
+}
+
+function initOrganSelectorPair({ sexGroupEl, sexInputEl, soughtGroupEl, lookingForInputEl, onChange }) {
+  const syncDerivedValue = () => {
+    const sexVal = sexInputEl?.value || '';
+    const soughtArr = getPillGroupSelectedValues(soughtGroupEl);
+    if (lookingForInputEl) {
+      lookingForInputEl.value = computeLookingForValue(sexVal, soughtArr);
+    }
+    if (onChange) onChange();
+  };
+
+  if (sexGroupEl && sexInputEl) {
+    sexGroupEl.querySelectorAll('.pill-radio-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-value');
+        const nextArr = sexInputEl.value === val ? [] : [val];
+        sexInputEl.value = nextArr[0] || '';
+        setPillGroupSelections(sexGroupEl, nextArr);
+        syncDerivedValue();
+      });
     });
-  });
+  }
+
+  if (soughtGroupEl) {
+    soughtGroupEl.querySelectorAll('.pill-radio-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-value');
+        const current = getPillGroupSelectedValues(soughtGroupEl);
+        const nextArr = current.includes(val)
+          ? current.filter((v) => v !== val)
+          : [...current, val];
+        setPillGroupSelections(soughtGroupEl, nextArr);
+        syncDerivedValue();
+      });
+    });
+  }
 }
 
 function updateHostFormValidity() {
   const name = hostPlayerName.value.trim();
+  const sexOrgans = hostSexOrgansInput?.value || '';
   const lookingFor = hostLookingForInput?.value || '';
-  const isValid = name.length > 0 && lookingFor.length > 0;
+  const isValid = name.length > 0 && sexOrgans.length > 0 && lookingFor.length > 0;
   btnConfirmCreateRoom.disabled = !isValid;
 }
 
 function updateJoinFormValidity() {
   const name = joinPlayerName.value.trim();
+  const sexOrgans = joinSexOrgansInput?.value || '';
   const lookingFor = joinLookingForInput?.value || '';
-  const isValid = name.length > 0 && lookingFor.length > 0;
+  const isValid = name.length > 0 && sexOrgans.length > 0 && lookingFor.length > 0;
   btnJoinGame.disabled = !isValid;
 }
 
 // Modals
 function openHostModal() {
   hostPlayerName.value = getSavedName();
-  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, []);
+  resetOrganSelectors(hostSexOrgansGroup, hostSexOrgansInput, hostSoughtOrgansGroup, hostLookingForInput);
   updateHostFormValidity();
   hostModal.classList.remove('hidden');
   hostPlayerName.focus();
@@ -2023,13 +2030,18 @@ btnCancelHost.addEventListener('click', closeHostModal);
 
 btnConfirmCreateRoom.addEventListener('click', async () => {
   const name = hostPlayerName.value.trim();
+  const sexOrgans = hostSexOrgansInput?.value || '';
   const lookingFor = hostLookingForInput?.value || '';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
+  if (!sexOrgans) {
+    showAlert('Please select your sex organs (Pole or Hole).');
+    return;
+  }
   if (!lookingFor) {
-    showAlert('Please select who you are looking for (Men, Women, or both).');
+    showAlert('Please select your sought sex organs.');
     return;
   }
 
@@ -2038,7 +2050,7 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
   btnConfirmCreateRoom.textContent = 'Creating...';
 
   try {
-    const data = await createRoom(name, lookingFor);
+    const data = await createRoom(name, lookingFor, sexOrgans);
     closeHostModal();
     showLobbyView(data.room, [data.player]);
   } catch (err) {
@@ -2069,13 +2081,18 @@ btnJoinGame.addEventListener('click', async () => {
   }
 
   const name = joinPlayerName.value.trim();
+  const sexOrgans = joinSexOrgansInput?.value || '';
   const lookingFor = joinLookingForInput?.value || '';
   if (!name) {
     showAlert('Please enter a username.');
     return;
   }
+  if (!sexOrgans) {
+    showAlert('Please select your sex organs (Pole or Hole).');
+    return;
+  }
   if (!lookingFor) {
-    showAlert('Please select who you are looking for (Men, Women, or both).');
+    showAlert('Please select your sought sex organs.');
     return;
   }
 
@@ -2084,7 +2101,7 @@ btnJoinGame.addEventListener('click', async () => {
   btnJoinGame.textContent = 'Joining...';
 
   try {
-    const data = await joinRoom(roomId, name, lookingFor);
+    const data = await joinRoom(roomId, name, lookingFor, sexOrgans);
     const { room, players } = await fetchRoom(roomId);
     showLobbyView(room, players);
   } catch (err) {
@@ -2365,10 +2382,22 @@ btnLeaveActiveGame.addEventListener('click', async () => {
 // App Initialization
 async function init() {
   initSwipeGestures();
-  setPillToggleSelections(hostLookingForGroup, hostLookingForInput, []);
-  setPillToggleSelections(joinLookingForGroup, joinLookingForInput, []);
-  initPillToggleGroup(hostLookingForGroup, hostLookingForInput, updateHostFormValidity);
-  initPillToggleGroup(joinLookingForGroup, joinLookingForInput, updateJoinFormValidity);
+  resetOrganSelectors(hostSexOrgansGroup, hostSexOrgansInput, hostSoughtOrgansGroup, hostLookingForInput);
+  resetOrganSelectors(joinSexOrgansGroup, joinSexOrgansInput, joinSoughtOrgansGroup, joinLookingForInput);
+  initOrganSelectorPair({
+    sexGroupEl: hostSexOrgansGroup,
+    sexInputEl: hostSexOrgansInput,
+    soughtGroupEl: hostSoughtOrgansGroup,
+    lookingForInputEl: hostLookingForInput,
+    onChange: updateHostFormValidity,
+  });
+  initOrganSelectorPair({
+    sexGroupEl: joinSexOrgansGroup,
+    sexInputEl: joinSexOrgansInput,
+    soughtGroupEl: joinSoughtOrgansGroup,
+    lookingForInputEl: joinLookingForInput,
+    onChange: updateJoinFormValidity,
+  });
   updateHostFormValidity();
   updateJoinFormValidity();
 
@@ -2414,7 +2443,7 @@ async function init() {
       hostCard.classList.add('hidden');
       joinCard.classList.remove('hidden');
       joinPlayerName.value = getSavedName();
-      setPillToggleSelections(joinLookingForGroup, joinLookingForInput, []);
+      resetOrganSelectors(joinSexOrgansGroup, joinSexOrgansInput, joinSoughtOrgansGroup, joinLookingForInput);
       updateJoinFormValidity();
       joinPlayerName.focus();
     } catch (err) {
