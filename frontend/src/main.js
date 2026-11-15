@@ -1,6 +1,6 @@
 import './style.css';
 import QRCode from 'qrcode';
-import { getDateStory, getConciliatoryMessage } from './dateStories.js';
+import { getDateStory, preloadPersonaStories, getConciliatoryMessage } from './dateStories.js';
 import {
   ensureAnonymousSession,
   createRoom,
@@ -1188,6 +1188,9 @@ function startDateInProgress(profileId) {
 
   chosenDateProfileId = profileId;
   dateInProgressActive = true;
+  if (selectedMatch.slug) {
+    preloadPersonaStories(selectedMatch.slug).catch(() => {});
+  }
 
   // Show only Date In Progress Card
   datePickerCard.classList.add('hidden');
@@ -1262,7 +1265,10 @@ function startDateInProgress(profileId) {
 }
 
 // Render Dating Phase View
-function renderDatingPhase() {
+let datingRenderSeq = 0;
+
+async function renderDatingPhase() {
+  const renderSeq = ++datingRenderSeq;
   const myPlayer = currentPlayers.find((p) => p.user_id === currentUser?.id);
   if (!myPlayer) return;
 
@@ -1334,14 +1340,15 @@ function renderDatingPhase() {
       return;
     }
 
+    const outcome = selectedMatch.date_outcome || 'good';
+    const story = await getDateStory(selectedMatch, outcome, myPlayer.sex_organs);
+    if (renderSeq !== datingRenderSeq) return;
+
     datePickerCard.classList.add('hidden');
     if (dateInProgressCard) dateInProgressCard.classList.add('hidden');
     dateZeroMatchesCard.classList.add('hidden');
     dateSpectatorCard.classList.add('hidden');
     dateStoryCard.classList.remove('hidden');
-
-    const outcome = selectedMatch.date_outcome || 'good';
-    const story = getDateStory(selectedMatch, outcome);
 
     dateOutcomeBadge.textContent = story.badgeText;
     dateOutcomeBadge.className = `date-outcome-badge ${story.badgeClass}`;
