@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/swipah-logo-final.svg" alt="Swipah logo" width="480" />
+  <img src="./swipah-tagline-light-logo.jpeg" alt="Swipah logo" width="480" />
 </p>
 
 # Swipah — Online Multiplayer Game
