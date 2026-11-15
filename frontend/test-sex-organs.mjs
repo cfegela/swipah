@@ -143,7 +143,7 @@ async function runTests() {
       )
     `);
     assert(
-      hostLabels === JSON.stringify(['I reproduce myself with:', 'Sex organs I like to touch:']),
+      hostLabels === JSON.stringify(['I contribute to reproduction by providing:', 'Sex organs I like to touch:']),
       'Unexpected host modal labels: ' + hostLabels
     );
 
@@ -237,7 +237,7 @@ async function runTests() {
 
     const joinRes = JSON.parse(joinMappingResult);
     assert(
-      JSON.stringify(joinRes.labels) === JSON.stringify(['I reproduce myself with:', 'Sex organs I like to touch:']),
+      JSON.stringify(joinRes.labels) === JSON.stringify(['I contribute to reproduction by providing:', 'Sex organs I like to touch:']),
       'Unexpected join card labels: ' + JSON.stringify(joinRes.labels)
     );
     assert(joinRes.initDisabled === true, 'Join button should start disabled');
