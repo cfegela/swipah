@@ -2037,11 +2037,11 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
     return;
   }
   if (!sexOrgans) {
-    showAlert('Please select your sex organs (Pole or Hole).');
+    showAlert('Please select your reproductive sex organ (Pole or Hole).');
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select your sought sex organs.');
+    showAlert('Please select the sex organs you seek.');
     return;
   }
 
@@ -2088,11 +2088,11 @@ btnJoinGame.addEventListener('click', async () => {
     return;
   }
   if (!sexOrgans) {
-    showAlert('Please select your sex organs (Pole or Hole).');
+    showAlert('Please select your reproductive sex organ (Pole or Hole).');
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select your sought sex organs.');
+    showAlert('Please select the sex organs you seek.');
     return;
   }
 
