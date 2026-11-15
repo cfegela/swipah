@@ -2,82 +2,61 @@
   <img src="./swipah-tagline-light-logo.jpeg" alt="Swipah logo" width="480" />
 </p>
 
-# Swipah — Online Multiplayer Game
+# How to Play Swipah
 
-Welcome to **Swipah**, a fast-paced multiplayer online spoof on Tinder where players connect, lobby up, and compete.
-
-Built with local-first development targeting deployment to **Supabase** (database, anonymous auth, and real-time events) and **Cloudflare Workers** (static assets SPA via Wrangler).
+**Swipah** is a 1–4 player online multiplayer dating-and-survival game. Swipe through profiles, hunt for matches, choose who to date, rack up points, and try not to get murdered.
 
 ---
 
-## Architecture & Tech Stack
+## 1. Setup & Lobby
 
-- **Frontend**: Vite SPA, Modern Vanilla JavaScript / DOM, CSS3, `@supabase/supabase-js`, `qrcode`
-- **Backend / DB**: Supabase PostgreSQL, Row Level Security (RLS), Stored Procedures (RPCs), and Realtime WebSocket replication
-- **Hosting / Edge**: Cloudflare Workers (`wrangler.jsonc` SPA asset hosting)
-- **Visual Design**: Dark `#000022` background paired with Tinder-inspired warm flame rose/coral gradients (`#fd267d` to `#ff6036`), sleek frosted cards, glowing responsive seats grid, and Web Audio API ascending chimes.
-
----
-
-## Features (Step 1: Landing Page & Lobby)
-
-1. **Frictionless Anonymous Guest Authentication**:
-   - Zero login or email required. Seamless anonymous session generation via Supabase Auth with self-healing reconnection handling.
-2. **Landing Page**:
-   - **Host Game Card**: Start a fresh game room with an auto-generated invite link.
-   - **Join Game Card**: Automatically activates when opening an invite link (`?room=<UUID>`) to join with a custom username.
-   - **Persistent Display Names**: Player usernames are saved to `localStorage` across sessions.
-3. **Multiplayer Lobby**:
-   - Concurrency-safe room joining with row-level locking (`FOR UPDATE`) in PostgreSQL.
-   - 4 designated player seats (Seats 1–4) with host badge, connected status indicator, and dynamic player count.
-   - Host-only controls: Copy invite link with clipboard toast, generate instant join QR code modal, and start game.
-   - Reconnection support: Players refreshing the browser automatically reclaim their existing seat.
-   - Real-time room status updates via Supabase channels + 2.5s polling heartbeat fallback.
-   - Temporary single-player testing mode supported (allows starting a test game with 1 player).
+1. **Create or Join a Room**: One player hosts a room (up to **4 players**, though solo play is also supported) and shares the invite link or QR code.
+2. **Build Your Profile**: Each player chooses:
+   - A **Username**
+   - How you contribute to reproduction (**Sperm** or **Eggs**)
+   - Which **Sex organs you like to touch** (**Same As Mine**, **Different From Mine**, or **Both**)
+   Your selections determine whether your swipe deck features Men, Women, or a 50/50 mix of Both.
+3. **Start the Game**: Once everyone is seated in the lobby, the host starts Round 1.
 
 ---
 
-## Local Development Setup
+## 2. Swiping Phase
 
-### 1. Prerequisites
-- [Docker Desktop](https://www.docker.com/) (running)
-- [Node.js](https://nodejs.org/) (v20+ recommended)
-- [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started)
+Each round begins in the **Swiping Phase**:
 
-### 2. Start Supabase
-In the project root:
-```bash
-supabase start
-```
-This spins up PostgreSQL, Gotrue Auth (with anonymous logins enabled), PostgREST, and Realtime on ports `54321` and `54322`.
+- **Your Deck**: Every surviving player receives a freshly shuffled deck of up to **10 profiles** you haven't dated yet in the current game (unseen profiles are prioritized first).
+- **Secret Matches**: Each round, **3 profiles** in your deck are secret matches, each with a hidden, distinct date outcome waiting for you.
+- **3 Likes Per Round**: Browse through the cards (swipe left/right or use the navigation controls) and tap **Like** on up to **3 profiles** (or fewer if fewer than 3 eligible profiles remain).
+- **Instant Match Reveals**: Liking a secret match triggers an immediate match notification.
+- **Phase Advance**: Once all surviving players have used their likes for the round, the game automatically moves to the **Dating Phase**.
 
-### 3. Install & Start Frontend
-In `frontend/`:
-```bash
-cd frontend
-npm install
-npm run dev
-```
+---
 
-### 4. Run Automated End-to-End Tests
-To run the automated multiplayer lobby test suite:
-```bash
-cd frontend
-npm test
-```
-The test verifies:
-- Multi-client anonymous session generation
-- Concurrency-safe room creation and seat 1–4 assignment
-- 5th player rejection when room is full
-- Seamless player reconnection / refresh retention
-- Host-only game start permissions
-- In-progress room joining lockdown
-- Host room closure / abandonment cascade
-- Single-player start mode for testing
+## 3. Dating Phase & Scoring
 
-### 5. Production Build
-```bash
-cd frontend
-npm run build
-```
-Builds static distribution bundle to `frontend/dist`.
+In the **Dating Phase**, every surviving player resolves one date before the next round begins:
+
+- **1 or More Matches**: Pick **1** of your matches to go on a date with and read the story of how it went. Each date results in one of four outcomes:
+
+| Date Outcome | Points | Effect |
+| :--- | :---: | :--- |
+| **Great Date** | **+1,000** | Survive and advance |
+| **Good Date** | **+500** | Survive and advance |
+| **Bad Date** | **-500** | Survive and advance |
+| **Murdered** | **0** | **Eliminated** — you become a ghost spectator for the rest of the game |
+
+  *(In any round, the 3 secret matches always have 3 different outcomes—most commonly Great/Good/Bad, with a smaller chance that one of the three is a Murderer.)*
+
+- **0 Matches**: If none of your likes matched (or you've already dated every eligible profile), you sit out the date for **0 points** and mark yourself ready for the next round.
+- **No Repeat Dates**: Any profile you go on a date with is permanently removed from your deck for the rest of that game.
+
+Once all surviving players confirm their date outcome, the next round begins.
+
+---
+
+## 4. Winning the Game
+
+- Rounds continue until all surviving players have dated every eligible profile in the catalog (or until the host ends the game).
+- **Final Standings**:
+  - **Surviving players** always rank ahead of **Murdered** players.
+  - Among survivors, the player with the **highest score** wins.
