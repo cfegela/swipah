@@ -2041,7 +2041,7 @@ btnConfirmCreateRoom.addEventListener('click', async () => {
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select the sex organs you seek.');
+    showAlert('Please select the sex organs you like to touch.');
     return;
   }
 
@@ -2092,7 +2092,7 @@ btnJoinGame.addEventListener('click', async () => {
     return;
   }
   if (!lookingFor) {
-    showAlert('Please select the sex organs you seek.');
+    showAlert('Please select the sex organs you like to touch.');
     return;
   }
 
