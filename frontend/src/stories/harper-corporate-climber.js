@@ -21,7 +21,7 @@ export default {
       "paragraphs": [
         "At a sleek Midtown East cocktail lounge, Harper clears her final unread Slack notification, locks her phone, and admits you didn't need an Ivy League business school degree to pass her due diligence. She slaps down her Amex Centurion card for the tab and pulls you straight into a town car toward JFK, bragging that her Delta Diamond Medallion upgrade just scored you two private first-class suites.",
         "Once the Delta One privacy doors slide shut at 35,000 feet, corporate discipline evaporates. Harper unbuttons her silk blouse, straddles your lap in the lie-flat seat, and guides your hard cock deep into her wet pussy. Her tits bounce furiously in your face as she rides your dick with the relentless stamina of a 5:30am SoulCycle zealot, biting her lip so the cabin crew won't hear her filthy moans.",
-        "After you cum inside a condom and return the favor by eating her pussy until her thighs shake like a turbulent landing, Harper curls naked against your chest under the airline duvet. She whispers that you've officially made her 5-year plan, schedules Sunday brunch on your calendar with zero agenda attached, and gives you a slow, filthy morning blowjob before touching down."
+        "After you cum deep inside her and return the favor by eating her pussy until her thighs shake like a turbulent landing, Harper curls naked against your chest under the airline duvet. She whispers that you've officially made her 5-year plan, schedules Sunday brunch on your calendar with zero agenda attached, and gives you a slow, filthy morning blowjob before touching down."
       ],
       "title": "Synergy in First Class with Harper!"
     },

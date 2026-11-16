@@ -13,7 +13,7 @@ export default {
       "paragraphs": [
         "Dinner was canned pinto beans heated on a camp stove in a Walmart Parking Lot, and yes, Chet's shower status was noticeably complicated. Still, watching his muscular arms tighten an alternator bolt with a socket wrench got you surprisingly worked up. When he flicked on the van's fairy lights, your standards dropped faster than your panties.",
         "There was zero room to stand in his 32-sq-ft palace, so you put your strong knees to work straddling Chet on the foam mattress. He gripped your ass tightly, thrusting up into your wet pussy while kissing your tits as shoppers rolled carts past outside. Every squeak of the rusted suspension made you giggle between breathless moans.",
-        "Right as you clamped down on his cock and climaxed, Chet's pinto-bean diet staged a loud, thunderous rebellion against the cedar planks. You both burst out laughing so hard he nearly lost rhythm, spilling inside the condom mid-chuckle. Sweaty, cramped, and vaguely gassy, yet honestly a solid B+ Walmart Parking Lot hookup."
+        "Right as you clamped down on his cock and climaxed, Chet's pinto-bean diet staged a loud, thunderous rebellion against the cedar planks. You both burst out laughing so hard he nearly lost rhythm, spilling deep inside you mid-chuckle. Sweaty, cramped, and vaguely gassy, yet honestly a solid B+ Walmart Parking Lot hookup."
       ],
       "title": "32 Square Feet of Fun with Chet VanLife!"
     },
@@ -47,7 +47,7 @@ export default {
       "paragraphs": [
         "You met Chet in a Walmart Parking Lot just as he finished wrenching on his 1994 Dodge Ram, shirtless and glistening with sweat and motor oil. Sure, he smelled faintly like axle grease and canned pinto beans, and his shower status was questionable at best—but one filthy wink sent you scrambling into the back of his van.",
         "Inside the cramped 32-sq-ft cedar box, your hard cocks pressed together instantly under flickering fairy lights. There wasn't room for fancy angles, so you traded frantic, sloppy blowjobs while gripping each other's asses until Chet begged you to top him. You bent him over his tool chest, pounding deep while he bit his lip.",
-        "Mid-stroke, Chet's knee knocked a socket wrench off the shelf straight onto his own toe, making him yelp and clamp down so tight you immediately busted inside the rubber. He shot a thick load across the cedar planks two seconds later, rubbing his foot and grinning like an idiot. Chaotic, greasy, and surprisingly hot B+ sex."
+        "Mid-stroke, Chet's knee knocked a socket wrench off the shelf straight onto his own toe, making him yelp and clamp down so tight you immediately busted deep inside him. He shot a thick load across the cedar planks two seconds later, rubbing his foot and grinning like an idiot. Chaotic, greasy, and surprisingly hot B+ sex."
       ],
       "title": "Socket-Wrench Quickie with Chet VanLife!"
     },

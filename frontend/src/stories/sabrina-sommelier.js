@@ -21,7 +21,7 @@ export default {
       "paragraphs": [
         "Sabrina brings a rare 2014 Bordeaux to a sunlit St. Helena vineyard terrace, casually greeting the estate owner by his first name before pouring you a blind flight. When you swirl the golden Jura vin jaune, grin, and correctly name the Savagnin grape on the first sniff, her jaw drops—you just shot straight to number one on her palate sophistication rankings.",
         "Ten minutes later she drags you into the cool private barrel room, kicks off her heels, and drops straight to her knees to worship your hard cock like it's a priceless Grand Cru. Once you're aching, you hoist her onto an oak wine barrel and drive your dick deep into her dripping pussy, gripping her ass while her tits heave with every breathless, echoing thrust.",
-        "You bury your face between her thighs to eat her out until she screams across the cellar, then finish inside a condom as she claws down your back. Afterward, she pops a real vintage Champagne—refusing to let you near cheap sparkling wine—and feeds you artisanal triple-cream brie off her naked stomach while whispering you're invited back forever."
+        "You bury your face between her thighs to eat her out until she screams across the cellar, then finish deep inside her as she claws down your back. Afterward, she pops a real vintage Champagne—refusing to let you near cheap sparkling wine—and feeds you artisanal triple-cream brie off her naked stomach while whispering you're invited back forever."
       ],
       "title": "Savagnin & Sin with Sabrina!"
     },

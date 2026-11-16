@@ -13,7 +13,7 @@ export default {
       "paragraphs": [
         "After surviving a sweaty ten-mile trail run around East Austin without Camila breaking stride once, you followed her home for a \"recovery ice bath\" that instantly turned X-rated. Stripping down beside the backyard plunge tub, you spent twenty freezing, thrilling minutes sucking her hard nipples and fingering her underwater before your balls practically retreated into your chest.",
         "Sprinting indoors dripping wet, you tackled her onto a leather sofa already coated in lifting chalk. Camila gripped your shaft with calloused Olympic-lifter precision, sank down onto your hard dick, and rode you relentlessly until the cushions squeaked like dying seals. The tiny hiccup? Mid-thrust, you grabbed her chalk-covered ass and left two massive bright-white handprints across both your chest and her antique rug.",
-        "Neither of you cared enough to pause—she kept slamming down until you blew your load into a condom and she came shuddering right after. Sure, your dick looked like it had been powdered for a gymnastics meet, but she gave you a killer deep-tissue leg rub afterward. Worth every smudge."
+        "Neither of you cared enough to pause—she kept slamming down until you blew your load deep inside her and she came shuddering right after. Sure, your dick looked like it had been powdered for a gymnastics meet, but she gave you a killer deep-tissue leg rub afterward. Worth every smudge."
       ],
       "title": "Chalk Dust and Climax with Camila Reyes!"
     },

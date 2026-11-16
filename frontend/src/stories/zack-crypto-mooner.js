@@ -12,7 +12,7 @@ export default {
     "good": {
       "paragraphs": [
         "Your date started chaotically when Zack nearly sideswiped a mailbox checking coin charts while driving, grinning like a golden retriever and insisting a crash just meant discounted entry. Still, his eternal optimism was weirdly adorable, and watching this Web3 evangelist tip the drive-thru cashier in Bitcoin actually got you a little wet in the passenger seat.",
-        "You pulled into a neon-lit motel, where Zack immediately tore your jeans off and pushed you onto the creaky mattress. His cock was rock-hard, and he fucked your pussy with chaotic, eager rhythm—until a green price-alert dinged on his nightstand. Distracted by the chart, Zack busted inside the condom in twelve seconds flat with an embarrassed groan.",
+        "You pulled into a neon-lit motel, where Zack immediately tore your jeans off and pushed you onto the creaky mattress. His cock was rock-hard, and he fucked your pussy with chaotic, eager rhythm—until a green price-alert dinged on his nightstand. Distracted by the chart, Zack busted deep inside you in twelve seconds flat with an embarrassed groan.",
         "To his credit, the NFT HODLer refused to sell the dip on your pleasure. Smiling sheepishly, Zack dropped between your legs, apologized for his premature launch, and ate you out like a starving man until your thighs shook and you came all over his chin. Messy, slightly nerdy, and surprisingly satisfying—you'd definitely swipe right on his 8-bit ape again."
       ],
       "title": "Bull-Market Quickie with Zack Mooner!"
