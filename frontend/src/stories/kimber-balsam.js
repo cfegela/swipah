@@ -11,7 +11,7 @@ export default {
     },
     "good": {
       "paragraphs": [
-        "After crushing a muddy fifteen-mile Adirondack gravel ride near Lake Placid, you and Kimber were both drenched in sweat and starving for trouble. Before her conservation maps were even unpacked inside her cedar cabin, she grabbed your collar, pushed you onto the plaid sofa, and shoved her thick wavy golden-brown hair behind her shoulders while sliding straight down to wrap her mouth around your cock.",
+        "After crushing a muddy fifteen-mile Adirondack gravel ride near Lake Placid, you and Kimber were both drenched in sweat and starving for trouble. Before her conservation maps were even unpacked inside her cedar cabin, she grabbed your collar, pushed you onto the plaid sofa, and shoved her thick wavy chestnut-brown hair behind her shoulders while sliding straight down to wrap her mouth around your cock.",
         "Once your dick was slick and aching, this tall 6'1\" Amazon straddled your lap, sliding down onto you slowly so her wide hips ground hard against yours. Grabbing her broad shoulders and pressing your face into her huge soft breasts, you fucked upward into her warm pussy while her blue glasses fogged slightly and her thick thighs gripped your waist tight.",
         "Small hiccup: halfway through you finishing hard inside her, her smartwatch buzzed with a neighborhood carpool pickup reminder and knocked an aluminum bottle of bear spray off the coffee table. Still, a thrilling, athletic B+ romp—complete with homemade trail brownies and orange slices in bed afterward."
       ],
@@ -45,7 +45,7 @@ export default {
     },
     "good": {
       "paragraphs": [
-        "After biking dusty singletrack outside Lake Placid, Kimber unlocked her cabin door and kicked off her muddy cycling shoes before pressing her tall 6'1\" frame straight against you against the entryway wall. Her thick wavy hair brushed your shoulders as you tugged off her teal jersey and buried your face into her warm, heavy breasts.",
+        "After biking dusty singletrack outside Lake Placid, Kimber unlocked her cabin door and kicked off her muddy cycling shoes before pressing her tall 6'1\" frame flush against you by the entryway wall. Her thick wavy chestnut hair brushed your shoulders as you tugged off her teal jersey and buried your face into her warm, heavy breasts.",
         "You pulled her padded bike shorts down past her wide hips and dropped to your knees, sliding two fingers deep inside her wet pussy while licking her clit until her knees buckled against the cedar wainscoting. Then she grabbed your hips effortlessly, lifted you onto the kitchen counter, and returned the favor with athletic, unhurried confidence.",
         "Only minor hiccup: mid-climax, your heel kicked a stack of conservation grant binders straight into her cooler of trail juice boxes. Still, a sweaty, deeply satisfying B+ afternoon followed by cold beers on the Adirondack deck."
       ],

@@ -28,7 +28,7 @@ export default {
     "murdered": {
       "paragraphs": [
         "Jacqlyn talked you into a private midnight skinny-dip at an exclusive cliffside Jamaican resort infinity pool overlooking the black Caribbean surf. Floating naked in the warm water, she pressed her large soft breasts against your chest, kissed lazily down your ribs, and wrapped her skilled mouth around your hard cock right against the infinity spillway ledge.",
-        "Gasping with your eyes squeezed shut in pure paradise, you absentmindedly murmured that her red-eyed Seaport competitor probably ran tighter enterprise enterprise renewals than her team. Jacqlyn went eerily calm, looked up with glittering emerald-green eyes, and whispered sweetly that nobody undercuts her closing rate.",
+        "Gasping with your eyes squeezed shut in pure paradise, you absentmindedly murmured that her red-eyed Seaport competitor probably ran tighter enterprise renewals than her team. Jacqlyn went eerily calm, looked up with glittering emerald-green eyes, and whispered sweetly that nobody undercuts her closing rate.",
         "Smiling innocently as you braced against the wet limestone edge, she waited until you surged toward climax, shoved hard beneath your thighs, and launched you headfirst right over the infinity waterfall down sixty feet of jagged coral reef cliff into the dark Atlantic swells. You were tragically eliminated from Swipah!"
       ],
       "title": "Closed Over the Cliff by Jacqlyn Fern..."
