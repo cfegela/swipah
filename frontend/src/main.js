@@ -1206,7 +1206,7 @@ function startDateInProgress(profileId) {
     : (selectedMatch.avatar_svg || '');
   if (dateInProgressAvatar) dateInProgressAvatar.innerHTML = avatarHtml;
   if (dateInProgressName) dateInProgressName.textContent = selectedMatch.name;
-  if (dateInProgressSub) dateInProgressSub.textContent = `${selectedMatch.age} • ${selectedMatch.occupation || 'Mystery Job'}`;
+  if (dateInProgressSub) dateInProgressSub.textContent = selectedMatch.occupation || 'Mystery Job';
 
   // Reset and animate progress bar smoothly over 10000ms
   if (dateProgressBarFill) {
@@ -1358,7 +1358,7 @@ async function renderDatingPhase() {
       : (selectedMatch.avatar_svg || '');
     datePartnerAvatar.innerHTML = avatarHtml;
     datePartnerName.textContent = selectedMatch.name;
-    datePartnerSub.textContent = `${selectedMatch.age} • ${selectedMatch.occupation || 'Mystery Job'}`;
+    datePartnerSub.textContent = selectedMatch.occupation || 'Mystery Job';
 
     dateStoryContent.innerHTML = story.paragraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
@@ -1407,7 +1407,7 @@ async function renderDatingPhase() {
         <button type="button" class="date-picker-item" data-profile-id="${escapeHtml(matchId)}">
           <div class="date-picker-avatar">${avatarHtml}</div>
           <div class="date-picker-info">
-            <div class="date-picker-name">${escapeHtml(match.name)}, ${match.age}</div>
+            <div class="date-picker-name">${escapeHtml(match.name)}</div>
             <div class="date-picker-sub">${escapeHtml(match.occupation || '')}</div>
             <span class="date-picker-btn">Go on Date</span>
           </div>
@@ -1579,7 +1579,6 @@ function renderCurrentProfile() {
         <div class="profile-hero-gradient"></div>
         <div class="profile-header-overlay">
           <span class="profile-name">${escapeHtml(profile.name)}</span>
-          <span class="profile-age">${profile.age}</span>
           <span class="profile-verified-badge" title="Verified Parody">✓</span>
         </div>
       </div>
