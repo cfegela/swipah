@@ -11,12 +11,12 @@ function assert(condition, message) {
 }
 
 async function runTests() {
-  console.log('🧪 Validating all 41 persona story modules (328 recaps)...\n');
+  console.log('🧪 Validating all 42 persona story modules (336 recaps)...\n');
 
   const storiesDir = path.resolve(process.cwd(), 'src/stories');
   const files = fs.readdirSync(storiesDir).filter((f) => f.endsWith('.js')).sort();
 
-  assert(files.length === 41, `Expected 41 story files, found ${files.length}`);
+  assert(files.length === 42, `Expected 42 story files, found ${files.length}`);
 
   const outcomes = ['great', 'good', 'bad', 'murdered'];
   const orientations = ['straight', 'gay'];
@@ -70,7 +70,7 @@ async function runTests() {
     }
   }
 
-  assert(totalStories === 328, `Expected 328 total recaps, validated ${totalStories}`);
+  assert(totalStories === 336, `Expected 336 total recaps, validated ${totalStories}`);
   if (anatomyWarnings.length > 0) {
     console.warn('⚠️ Anatomy audit warnings:\n  - ' + anatomyWarnings.join('\n  - '));
   }
@@ -98,6 +98,11 @@ async function runTests() {
     const lunaStraight = await getDateStory({ slug: 'luna-starweaver', name: 'Luna Starweaver', gender: 'woman' }, 'murdered', 'pole');
     assert(lunaGay.badgeText === 'YOU WERE MURDERED!' && lunaGay.scoreDeltaText === 'Eliminated', 'Luna gay badge failed');
     assert(lunaGay.title !== lunaStraight.title, 'Luna gay vs straight should differ');
+
+    const kimberGay = await getDateStory({ slug: 'kimber-balsam', name: 'Kimber Balsam', gender: 'woman' }, 'great', 'hole');
+    const kimberStraight = await getDateStory({ slug: 'kimber-balsam', name: 'Kimber Balsam', gender: 'woman' }, 'great', 'pole');
+    assert(kimberGay.badgeText.includes('INCREDIBLE DATE') && kimberGay.paragraphs.length === 3, 'Kimber gay story failed');
+    assert(kimberStraight.paragraphs.length === 3 && kimberGay.title !== kimberStraight.title, 'Kimber gay vs straight should differ');
 
     console.log('✓ Verified Vite import.meta.glob dynamic loader & orientation routing in dateStories.js!');
   } finally {
