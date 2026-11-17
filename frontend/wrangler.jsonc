@@ -5,6 +5,16 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "pattern": "swipah.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.swipah.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "dist",
     "not_found_handling": "single-page-application"
