@@ -11,12 +11,12 @@ function assert(condition, message) {
 }
 
 async function runTests() {
-  console.log('🧪 Validating all 59 persona story modules (472 recaps)...\n');
+  console.log('🧪 Validating all 63 persona story modules (504 recaps)...\n');
 
   const storiesDir = path.resolve(process.cwd(), 'src/stories');
   const files = fs.readdirSync(storiesDir).filter((f) => f.endsWith('.js')).sort();
 
-  assert(files.length === 59, `Expected 59 story files, found ${files.length}`);
+  assert(files.length === 63, `Expected 63 story files, found ${files.length}`);
 
   const outcomes = ['great', 'good', 'bad', 'murdered'];
   const orientations = ['straight', 'gay'];
@@ -70,7 +70,7 @@ async function runTests() {
     }
   }
 
-  assert(totalStories === 472, `Expected 472 total recaps, validated ${totalStories}`);
+  assert(totalStories === 504, `Expected 504 total recaps, validated ${totalStories}`);
   if (anatomyWarnings.length > 0) {
     console.warn('⚠️ Anatomy audit warnings:\n  - ' + anatomyWarnings.join('\n  - '));
   }
